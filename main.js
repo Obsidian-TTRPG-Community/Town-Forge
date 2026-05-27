@@ -8279,7 +8279,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     const s = this.state;
     const edges = s.edgesAuto ? "auto" : ["N", "E", "S", "W"].filter((e) => s.edges[e]).join("") || "none";
     const lines = [
-      "Town Forge \u2014 config for support (v1.0.0)",
+      "Town Forge \u2014 config for support (v1.0.1)",
       `terrain: ${s.terrain}`,
       `mode: ${s.mode}`,
       `settlement: ${s.settlement}`,
@@ -8415,7 +8415,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
         places = await this.resolveNames(slots, mapName);
         const markersFile = buildMarkersFile({ places, mapSize: this.lastMapSize, imagePath: pngPath });
         await this.app.vault.create(`${pngPath}.markers.json`, JSON.stringify(markersFile, null, 2));
-        noteStats = await this.writePlaceNotes(places, folder, mapName);
+        noteStats = await this.writePlaceNotes(places, folder, mapName, this.state.mode === "full" ? this.state.settlement : "");
       }
       const block = [
         "```zoommap",
@@ -8491,11 +8491,14 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
   }
   // Ensure the note body has a `type:` frontmatter property set to the note
   // type.  If the body already opens with a YAML block, inject/replace `type:`
-  // there; otherwise prepend a small frontmatter block.  Town added if absent.
-  ensureTypeFrontmatter(body, type, town, subtype) {
+  // there; otherwise prepend a small frontmatter block.  `town`, `subtype`
+  // (when present), and `size` (the settlement size, when present) are added
+  // too so templates / Randomness rolls can read them.
+  ensureTypeFrontmatter(body, type, town, subtype, size) {
     const fmMatch = body.match(/^---\n([\s\S]*?)\n---\n?/);
     const yamlVal = (v) => /[:#\-?\[\]{},&*!|>'"%@`]/.test(v) ? JSON.stringify(v) : v;
     const hasSub = !!(subtype && subtype.trim());
+    const hasSize = !!(size && size.trim());
     if (fmMatch) {
       let fm = fmMatch[1];
       if (/^type\s*:/m.test(fm))
@@ -8510,6 +8513,13 @@ ${fm}`;
           fm = `${fm}
 subtype: ${yamlVal(subtype)}`;
       }
+      if (hasSize) {
+        if (/^size\s*:/m.test(fm))
+          fm = fm.replace(/^size\s*:.*$/m, `size: ${yamlVal(size)}`);
+        else
+          fm = `${fm}
+size: ${yamlVal(size)}`;
+      }
       if (!/^town\s*:/m.test(fm))
         fm = `${fm}
 town: ${yamlVal(town)}`;
@@ -8520,15 +8530,17 @@ ${fm}
     }
     const sub = hasSub ? `subtype: ${yamlVal(subtype)}
 ` : "";
+    const sz = hasSize ? `size: ${yamlVal(size)}
+` : "";
     return `---
 type: ${yamlVal(type)}
-${sub}town: ${yamlVal(town)}
+${sub}${sz}town: ${yamlVal(town)}
 ---
 ${body}`;
   }
-  // Fill {{name}}, {{type}}, {{subtype}}, {{town}} tokens; Randomness syntax is left intact.
-  fillTemplate(tpl, name, type, town, subtype) {
-    return tpl.replace(/\{\{\s*name\s*\}\}/g, name).replace(/\{\{\s*type\s*\}\}/g, type).replace(/\{\{\s*subtype\s*\}\}/g, subtype ?? "").replace(/\{\{\s*town\s*\}\}/g, town);
+  // Fill {{name}}, {{type}}, {{subtype}}, {{size}}, {{town}} tokens; Randomness syntax is left intact.
+  fillTemplate(tpl, name, type, town, subtype, size) {
+    return tpl.replace(/\{\{\s*name\s*\}\}/g, name).replace(/\{\{\s*type\s*\}\}/g, type).replace(/\{\{\s*subtype\s*\}\}/g, subtype ?? "").replace(/\{\{\s*size\s*\}\}/g, size ?? "").replace(/\{\{\s*town\s*\}\}/g, town);
   }
   // Built-in fallback note when no template exists for a type.
   defaultPlaceNote(name, type, town) {
@@ -8617,7 +8629,7 @@ ${body}`;
   // of folder — stay unambiguous and the pins keep working.  Templates are
   // cached per type to avoid re-reading.  Returns counts so the caller can tell
   // the user whether templates were found.
-  async writePlaceNotes(places, folder, town) {
+  async writePlaceNotes(places, folder, town, size) {
     const tplCache = /* @__PURE__ */ new Map();
     const usedTitles = /* @__PURE__ */ new Set();
     const ensuredFolders = /* @__PURE__ */ new Set([folder]);
@@ -8638,8 +8650,8 @@ ${body}`;
         title = `${title} ${n}`;
       }
       usedTitles.add(title.toLowerCase());
-      let body = tpl !== null ? this.fillTemplate(tpl, pl.name, pl.noteType, town, pl.subtype) : this.defaultPlaceNote(pl.name, pl.noteType, town);
-      body = this.ensureTypeFrontmatter(body, pl.noteType, town, pl.subtype);
+      let body = tpl !== null ? this.fillTemplate(tpl, pl.name, pl.noteType, town, pl.subtype, size) : this.defaultPlaceNote(pl.name, pl.noteType, town);
+      body = this.ensureTypeFrontmatter(body, pl.noteType, town, pl.subtype, size);
       if (tpl !== null)
         fromTemplate++;
       else
