@@ -94,6 +94,8 @@ Names come from either built-in word lists or a **custom JS hook**. A hook can r
 
 When a place is pinned, Town Forge looks for a template note named after the place's note type (e.g. `Shop.md`) in your template folder and copies it as the place's note, filling `{{name}}`, `{{type}}`, `{{subtype}}`, and `{{town}}`. Any [Randomness](https://github.com/Obsidian-TTRPG-Community/Randomness) or Templater syntax in the template is left intact and resolves when the note is opened. If no template exists for a type, a simple default note is written.
 
+> For a full walkthrough of wiring up rich, self-rolling place notes with **Randomness** and **Templater** — including ready-made settlement tables — see [docs/randomness-templater-setup.md](docs/randomness-templater-setup.md).
+
 > **Icons:** TTRPG Tools: Maps renders icons from a user-configured library. Town Forge writes the icon key you set per pin type, but a key only renders if it exists in your maps-plugin icon library. The defaults use stock keys; customise per type once you've imported the icons you want.
 
 ## Settings
