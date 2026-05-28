@@ -1917,6 +1917,14 @@ function finalizeWithPull(roads, scene, terrain, w, h, bridge = null) {
     townSite = pullTownSiteToCoast(townSite, scene, w, h);
   }
   if (townSite !== null) {
+    const arterialPolys = roads.filter((r) => r.role === "primary" || r.role === "branch" || r.role === "bridge").map((r) => r.points).filter((p) => p && p.length >= 2);
+    if (arterialPolys.length) {
+      const snapped = closestPointOnPolylines(townSite, arterialPolys);
+      if (snapped !== null)
+        townSite = snapped;
+    }
+  }
+  if (townSite !== null) {
     for (const road of roads)
       road.town_site = townSite;
   }
@@ -5709,7 +5717,7 @@ function generateFull(terrain, seedStr, opts) {
   let roads = [];
   let townSite = null;
   if (opts.showRoads !== false) {
-    const enabled = opts.enabledEdges ?? defaultEdges(rng);
+    const enabled = opts.enabledEdges ?? defaultEdges(rng, scene, w, h, terrain);
     const net = buildRoadNetwork(rng, scene, w, h, terrain, enabled);
     roads = net.roads;
     townSite = net.townSite;
@@ -6058,12 +6066,45 @@ function recenterSceneOnCity(scene, w, h, out = 1e3) {
       hh.centre = { x: hh.centre.x + dx, y: hh.centre.y + dy };
   }
 }
-function defaultEdges(rng) {
+function edgeMidpoint(edge, w, h) {
+  const inset = 0.12;
+  switch (edge) {
+    case "N":
+      return { x: w * 0.5, y: h * inset };
+    case "S":
+      return { x: w * 0.5, y: h * (1 - inset) };
+    case "E":
+      return { x: w * (1 - inset), y: h * 0.5 };
+    default:
+      return { x: w * inset, y: h * 0.5 };
+  }
+}
+function defaultEdges(rng, scene, w, h, terrain) {
+  const dirs = ["N", "E", "S", "W"];
   const e = {};
-  for (const k of ["N", "E", "S", "W"])
+  for (const k of dirs)
     e[k] = rng() < 0.6;
   if (!Object.values(e).some(Boolean)) {
-    e[["N", "E", "S", "W"][Math.floor(rng() * 4)]] = true;
+    e[dirs[Math.floor(rng() * 4)]] = true;
+  }
+  if (terrain === "river" && scene.centreline && scene.centreline.length >= 2) {
+    const bankOf = {};
+    const byBank = { A: [], B: [] };
+    for (const k of dirs) {
+      const b = waterSideOfPoint(edgeMidpoint(k, w, h), scene, w, h);
+      bankOf[k] = b;
+      byBank[b].push(k);
+    }
+    if (byBank.A.length && byBank.B.length) {
+      const enabledBanks = new Set(dirs.filter((k) => e[k]).map((k) => bankOf[k]));
+      for (const bank of ["A", "B"]) {
+        if (!enabledBanks.has(bank)) {
+          const cand = byBank[bank];
+          const pick2 = cand[Math.floor(rng() * cand.length)];
+          e[pick2] = true;
+        }
+      }
+    }
   }
   return e;
 }
@@ -8279,7 +8320,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     const s = this.state;
     const edges = s.edgesAuto ? "auto" : ["N", "E", "S", "W"].filter((e) => s.edges[e]).join("") || "none";
     const lines = [
-      "Town Forge \u2014 config for support (v1.0.1)",
+      "Town Forge \u2014 config for support (v1.0.3)",
       `terrain: ${s.terrain}`,
       `mode: ${s.mode}`,
       `settlement: ${s.settlement}`,
