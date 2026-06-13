@@ -9275,7 +9275,23 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
-      new import_obsidian2.Setting(containerEl).setName("Create place templates").setDesc('Write the bundled place templates (Shop, Inn, Tavern, Temple, Castle, Barracks and more) into the template folder above. They fill each note with rolled content matching the name Town Forge chose - and with the Randomness plugin (plus its Fantasy Portrait Pack and Fantasy Hub content) every keeper arrives named and portraited. Needs Templater with "Trigger Templater on new file creation" ON. Safe to click again after updates; it overwrites these 15 names only.').addButton(
+      new import_obsidian2.Setting(containerEl).setName("Create place templates").setDesc('Write the bundled place templates (Shop, Inn, Tavern, Temple, Castle, Barracks and more) into the template folder above. They fill each note with rolled content matching the name Town Forge chose - and with the Randomness plugin (plus its Fantasy Portrait Pack and Fantasy Hub content) every keeper arrives named and portraited. Needs Templater with "Trigger Templater on new file creation" ON. Safe to click again after updates; it overwrites these 15 names only.').addExtraButton(
+        (b) => b.setIcon("dice").setTooltip("Get Randomness (rolls the content + portraits)").onClick(() => {
+          window.open("obsidian://show-plugin?id=randomness");
+        })
+      ).addExtraButton(
+        (b) => b.setIcon("scroll").setTooltip("Get Templater (runs the templates - enable its 'Trigger on new file creation')").onClick(() => {
+          window.open("obsidian://show-plugin?id=templater-obsidian");
+        })
+      ).addExtraButton(
+        (b) => b.setIcon("shield").setTooltip("Get Heraldry Weaver (crests on castles and guilds)").onClick(() => {
+          window.open("obsidian://show-plugin?id=heraldry-weaver");
+        })
+      ).addExtraButton(
+        (b) => b.setIcon("palette").setTooltip("Get the ITS theme (styles the NPC infoboxes)").onClick(() => {
+          window.open("obsidian://show-theme?name=ITS%20Theme");
+        })
+      ).addButton(
         (b) => b.setButtonText("Create / update").setCta().onClick(async () => {
           try {
             const r = await this.plugin.seedPlaceTemplates();
