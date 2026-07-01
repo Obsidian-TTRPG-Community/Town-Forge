@@ -1561,7 +1561,8 @@ function findMeetingPoint(rng, grid, w, h, cellW, cellH, scene, sideFilter, edge
       return { pt: { x, y }, cell: [ix, iy] };
     }
     const d = distToWaterEdge({ x, y });
-    const score = Math.abs(d - waterStandoff) + grid[iy][ix] * 0.5;
+    const centreDist = Math.hypot(x - w / 2, y - h / 2);
+    const score = Math.abs(d - waterStandoff) + grid[iy][ix] * 0.5 + centreDist * 0.35;
     if (score < bestCandScore) {
       bestCandScore = score;
       bestCand = { pt: { x, y }, cell: [ix, iy] };
@@ -1985,7 +1986,7 @@ function buildRoadNetwork(rng, scene, w, h, terrain, enabledEdges) {
           continue;
         if (p.y < h * 0.08 || p.y > h * 0.92)
           continue;
-        const cost = Math.hypot(primaryA.pt.x - p.x, primaryA.pt.y - p.y) + Math.hypot(primaryB.pt.x - p.x, primaryB.pt.y - p.y);
+        const cost = Math.hypot(primaryA.pt.x - p.x, primaryA.pt.y - p.y) + Math.hypot(primaryB.pt.x - p.x, primaryB.pt.y - p.y) + Math.hypot(p.x - w / 2, p.y - h / 2) * 1.5;
         if (cost < bestCost) {
           bestCost = cost;
           best = p;
@@ -5797,8 +5798,8 @@ function recenterSceneOnCity(scene, w, h, out = 1e3) {
     return;
   const cityCx = cxs.reduce((s, v) => s + v, 0) / cxs.length;
   const cityCy = cys.reduce((s, v) => s + v, 0) / cys.length;
-  const dx = out / 2 - cityCx;
-  const dy = out / 2 - cityCy;
+  const dx = Math.max(out - w, Math.min(0, out / 2 - cityCx));
+  const dy = Math.max(out - h, Math.min(0, out / 2 - cityCy));
   if (Math.abs(dx) < 1 && Math.abs(dy) < 1)
     return;
   if (scene.water)
