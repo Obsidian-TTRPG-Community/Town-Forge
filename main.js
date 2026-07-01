@@ -1549,8 +1549,10 @@ function findMeetingPoint(rng, grid, w, h, cellW, cellH, scene, sideFilter, edge
   let bestCand = null;
   let bestCandScore = Infinity;
   for (let i = 0; i < 240; i++) {
-    const x = cxT + (rng() - 0.5) * 2 * searchBand;
-    const y = cyT + (rng() - 0.5) * 2 * searchBand;
+    const bx = i % 2 === 0 ? cxT : w / 2;
+    const by = i % 2 === 0 ? cyT : h / 2;
+    const x = bx + (rng() - 0.5) * 2 * searchBand;
+    const y = by + (rng() - 0.5) * 2 * searchBand;
     if (!ok({ x, y }))
       continue;
     const ix = Math.max(0, Math.min(GRID_W - 1, Math.floor(x / cellW)));
@@ -1562,7 +1564,7 @@ function findMeetingPoint(rng, grid, w, h, cellW, cellH, scene, sideFilter, edge
     }
     const d = distToWaterEdge({ x, y });
     const centreDist = Math.hypot(x - w / 2, y - h / 2);
-    const score = Math.abs(d - waterStandoff) + grid[iy][ix] * 0.5 + centreDist * 0.35;
+    const score = Math.abs(d - waterStandoff) + grid[iy][ix] * 0.5 + centreDist * 0.5;
     if (score < bestCandScore) {
       bestCandScore = score;
       bestCand = { pt: { x, y }, cell: [ix, iy] };
@@ -1745,13 +1747,25 @@ function computeTownSite(roads, bridge, w, h) {
     const nearEdge = (p) => p.x <= 12 || p.x >= w - 12 || p.y <= 12 || p.y >= h - 12;
     const startNear = nearEdge(pts[0]);
     const endNear = nearEdge(pts[pts.length - 1]);
+    const centralPoint = () => {
+      let best = pts[Math.floor(pts.length / 2)];
+      let bd = Infinity;
+      for (const p of pts) {
+        const d = Math.hypot(p.x - w / 2, p.y - h / 2);
+        if (d < bd) {
+          bd = d;
+          best = p;
+        }
+      }
+      return best;
+    };
     if (startNear && endNear)
-      return pts[Math.floor(pts.length / 2)];
+      return centralPoint();
     if (startNear && !endNear)
       return pts[pts.length - 1];
     if (endNear && !startNear)
       return pts[0];
-    return pts[Math.floor(pts.length / 2)];
+    return centralPoint();
   }
   const xs = branches.map((b) => b.points[b.points.length - 1].x);
   const ys = branches.map((b) => b.points[b.points.length - 1].y);
@@ -1896,6 +1910,46 @@ function pullTownSiteToCoast(townSite, scene, w, h) {
   const nearDist = Math.sqrt(bestD2);
   if (nearDist <= harbourOffset * 1.5)
     return townSite;
+  {
+    const corridor = nearDist + 260;
+    const corridor2 = corridor * corridor;
+    let bestCentre = Infinity;
+    for (let i = 0; i < n; i++) {
+      const a = water[i];
+      const b = water[(i + 1) % n];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const seg2 = dx * dx + dy * dy;
+      let px;
+      let py;
+      if (seg2 < 1e-9) {
+        px = a.x;
+        py = a.y;
+      } else {
+        const t = Math.max(0, Math.min(1, ((tx - a.x) * dx + (ty - a.y) * dy) / seg2));
+        px = a.x + dx * t;
+        py = a.y + dy * t;
+      }
+      if (!onCanvas(px, py))
+        continue;
+      if ((tx - px) ** 2 + (ty - py) ** 2 > corridor2)
+        continue;
+      const cDist = Math.hypot(px - w / 2, py - h / 2);
+      if (cDist < bestCentre) {
+        bestCentre = cDist;
+        bestPt = { x: px, y: py };
+        const ix = tx - px;
+        const iy = ty - py;
+        const il = Math.hypot(ix, iy);
+        if (il > 1e-6)
+          bestInward = { x: ix / il, y: iy / il };
+        else {
+          const nl = Math.hypot(dx, dy) || 1;
+          bestInward = { x: -dy / nl, y: dx / nl };
+        }
+      }
+    }
+  }
   let hx = bestPt.x + bestInward.x * harbourOffset;
   let hy = bestPt.y + bestInward.y * harbourOffset;
   hx = Math.max(edgeMargin, Math.min(w - edgeMargin, hx));
@@ -5798,8 +5852,26 @@ function recenterSceneOnCity(scene, w, h, out = 1e3) {
     return;
   const cityCx = cxs.reduce((s, v) => s + v, 0) / cxs.length;
   const cityCy = cys.reduce((s, v) => s + v, 0) / cys.length;
-  const dx = Math.max(out - w, Math.min(0, out / 2 - cityCx));
-  const dy = Math.max(out - h, Math.min(0, out / 2 - cityCy));
+  const pickShift = (vals, centre, desired, lo0, hi0) => {
+    const sorted = vals.slice().sort((a, b) => a - b);
+    const nn = sorted.length;
+    const bLo = sorted[Math.floor(nn * 0.02)] - 20;
+    const bHi = sorted[Math.min(nn - 1, Math.ceil(nn * 0.98))] + 20;
+    const fitLo = -bLo;
+    const fitHi = out - bHi;
+    const lo1 = Math.max(lo0, fitLo);
+    const hi1 = Math.min(hi0, fitHi);
+    if (lo1 <= hi1)
+      return Math.max(lo1, Math.min(hi1, desired));
+    const VOID_CAP = 220;
+    const lo2 = Math.max(lo0 - VOID_CAP, fitLo);
+    const hi2 = Math.min(hi0 + VOID_CAP, fitHi);
+    if (lo2 <= hi2)
+      return Math.max(lo2, Math.min(hi2, desired));
+    return Math.max(lo0 - VOID_CAP, Math.min(hi0 + VOID_CAP, desired));
+  };
+  const dx = pickShift(cxs, cityCx, out / 2 - cityCx, out - w, 0);
+  const dy = pickShift(cys, cityCy, out / 2 - cityCy, out - h, 0);
   if (Math.abs(dx) < 1 && Math.abs(dy) < 1)
     return;
   if (scene.water)
