@@ -1666,7 +1666,7 @@ function stampRoadCostWeighted(grid, polyline, cellW, cellH, nearEndFactor = 20,
         const ny = iy0 + dy;
         if (nx < 0 || nx >= GRID_W || ny < 0 || ny >= GRID_H)
           continue;
-        const k = (ny * GRID_W + nx) * (n + 1) + i;
+        const k = ny * GRID_W + nx;
         if (stamped.has(k))
           continue;
         stamped.add(k);
@@ -2234,7 +2234,7 @@ function tryPlaceSubroad(rng, grid, scene, cellW, cellH, w, h, anchorPt, chosenA
       const cand = (rng() - 0.5) * 2 * Math.PI;
       let minSep = Math.PI;
       for (const a of chosenAngles) {
-        const d = Math.abs((cand - a + Math.PI) % (2 * Math.PI) - Math.PI);
+        const d = Math.abs(((cand - a) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
         if (d < minSep)
           minSep = d;
       }
@@ -2579,7 +2579,7 @@ function rngShuffle(rng, lst) {
 }
 var OUTBUILDING_COUNTS = {
   // Small settlements get a handful of outlying functional buildings for
-  // character — a mill, an inn, a stable — with no generic sprawl (that's a
+  // character \u2014 a mill, an inn, a stable \u2014 with no generic sprawl (that's a
   // city phenomenon).  Numbers grow with size.
   village: { mill: 1, inn: 1, stable: 1, generic: 0 },
   small_town: { mill: 1, inn: 1, stable: 1, generic: 0 },
@@ -4217,7 +4217,7 @@ function buildCityFootprint(rng, scene, townSite, coreRadius, armLength, w, h) {
       wobble += amp * Math.sin(a * freq + ph);
     let lobe = 0;
     for (const [la, lh, lw] of lobes) {
-      const d = Math.abs((a - la + Math.PI) % (2 * Math.PI) - Math.PI);
+      const d = Math.abs(((a - la) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
       lobe += lh * Math.exp(-(d * d) / (2 * lw * lw));
     }
     let bulge = 0;
@@ -5318,7 +5318,7 @@ function placeLandmarks(rng, scene, townSite, coreRadius, size, terrain, w, h, o
 function resampleClosed(poly, step = 14) {
   if (poly.length < 3)
     return poly;
-  const out = [poly[0]];
+  const out = [];
   let carry = 0;
   for (let i = 0; i < poly.length; i++) {
     const a = poly[i];
@@ -5805,6 +5805,7 @@ function recenterSceneOnCity(scene, w, h, out = 1e3) {
     scene.water = translatePolyline(scene.water, dx, dy);
   if (scene.centreline)
     scene.centreline = translatePolyline(scene.centreline, dx, dy);
+  const floodStrips = [];
   if (scene.terrain === "river" && scene.centreline && scene.centreline.length >= 4 && scene.riverWidth) {
     const cl = scene.centreline;
     const inCrop = (p) => p.x >= 0 && p.x <= out && p.y >= 0 && p.y <= out;
@@ -5820,11 +5821,18 @@ function recenterSceneOnCity(scene, w, h, out = 1e3) {
         hy /= hl;
         return { x: a.x + hx * reach, y: a.y + hy * reach };
       };
+      const stripPad = 8;
       let extended = cl.slice();
-      if (headInside)
-        extended = [extendPt(cl[0], cl[1]), ...extended];
-      if (tailInside)
-        extended = [...extended, extendPt(cl[cl.length - 1], cl[cl.length - 2])];
+      if (headInside) {
+        const e0 = extendPt(cl[0], cl[1]);
+        floodStrips.push(offsetPolyline([e0, cl[0]], scene.riverWidth / 2 + stripPad));
+        extended = [e0, ...extended];
+      }
+      if (tailInside) {
+        const e1 = extendPt(cl[cl.length - 1], cl[cl.length - 2]);
+        floodStrips.push(offsetPolyline([cl[cl.length - 1], e1], scene.riverWidth / 2 + stripPad));
+        extended = [...extended, e1];
+      }
       scene.centreline = extended;
       scene.water = offsetPolyline(extended, scene.riverWidth / 2);
     }
@@ -6065,6 +6073,15 @@ function recenterSceneOnCity(scene, w, h, out = 1e3) {
     if (hh.centre)
       hh.centre = { x: hh.centre.x + dx, y: hh.centre.y + dy };
   }
+  for (const strip of floodStrips) {
+    removeHousesIn(scene, strip);
+    if (scene.outbuildings)
+      scene.outbuildings = scene.outbuildings.filter((ob) => !pointInPolygon(ob.centre, strip));
+  }
+  if (ts)
+    scene.townSite = ts;
+  else if (scene.townSite)
+    scene.townSite = { x: scene.townSite.x + dx, y: scene.townSite.y + dy };
 }
 function edgeMidpoint(edge, w, h) {
   const inset = 0.12;
@@ -7774,7 +7791,7 @@ function buildMarkersFile(opts) {
     x: clamp01(pl.px.x / mapSize),
     y: clamp01(pl.px.y / mapSize),
     layer: layerId(pl.layerName),
-    link: pl.name,
+    link: pl.noteTitle ?? pl.name,
     iconKey: pl.icon || "circle_black_city",
     tooltip: pl.name,
     scaleLikeSticker: true
@@ -7834,7 +7851,7 @@ function randomName() {
   return titleCase(a + b);
 }
 var TownForgePreviewView = class extends import_obsidian.ItemView {
-  constructor(leaf, getExportFolder, getTemplateFolder, getPinTypes, getOpenAfterExport, getGroupNotesByType, getEnableZoomMapExport, getShowTroubleshoot) {
+  constructor(leaf, getExportFolder, getTemplateFolder, getPinTypes, getOpenAfterExport, getGroupNotesByType, getEnableZoomMapExport, getShowTroubleshoot, getScaleMultiplier, getDistanceUnit) {
     super(leaf);
     this.state = {
       terrain: "river",
@@ -7874,6 +7891,8 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     this.getGroupNotesByType = getGroupNotesByType ?? (() => true);
     this.getEnableZoomMapExport = getEnableZoomMapExport ?? (() => false);
     this.getShowTroubleshoot = getShowTroubleshoot ?? (() => false);
+    this.getScaleMultiplier = getScaleMultiplier ?? (() => 1);
+    this.getDistanceUnit = getDistanceUnit ?? (() => "miles");
   }
   getViewType() {
     return TOWN_FORGE_VIEW;
@@ -8392,17 +8411,21 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
   }
   async saveToVault() {
     try {
+      if (this.stale)
+        this.refresh();
       const blob = await new Promise((res) => this.canvas.toBlob((b) => res(b), "image/png"));
       if (!blob) {
         new import_obsidian.Notice("Town Forge: could not render PNG");
         return;
       }
       const buf = await blob.arrayBuffer();
-      const base = (this.state.name ? this.state.name.replace(/\s+/g, "-") : this.state.seed).toLowerCase();
-      let path = `${base}-${this.state.terrain}.png`;
+      const base = this.sanitizeName(this.state.name || this.state.seed).replace(/\s+/g, "-").toLowerCase();
+      const root = (this.getExportFolder() || "Maps").replace(/^\/+|\/+$/g, "");
+      await this.ensureFolder(root);
+      let path = (0, import_obsidian.normalizePath)(`${root}/${base}-${this.state.terrain}.png`);
       let i = 1;
       while (this.app.vault.getAbstractFileByPath(path)) {
-        path = `${base}-${this.state.terrain}-${i}.png`;
+        path = (0, import_obsidian.normalizePath)(`${root}/${base}-${this.state.terrain}-${i}.png`);
         i++;
       }
       await this.app.vault.createBinary(path, buf);
@@ -8438,6 +8461,8 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
   // a `zoommap` code block pointing at it so the map renders interactively.
   async exportToZoomMap() {
     try {
+      if (this.stale)
+        this.refresh();
       const blob = await new Promise((res) => this.canvas.toBlob((b) => res(b), "image/png"));
       if (!blob) {
         new import_obsidian.Notice("Town Forge: could not render PNG");
@@ -8468,9 +8493,9 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
           this.lastMapSize
         );
         places = await this.resolveNames(slots, mapName);
+        noteStats = await this.writePlaceNotes(places, folder, mapName, this.state.mode === "full" ? this.state.settlement : "");
         const markersFile = buildMarkersFile({ places, mapSize: this.lastMapSize, imagePath: pngPath });
         await this.app.vault.create(`${pngPath}.markers.json`, JSON.stringify(markersFile, null, 2));
-        noteStats = await this.writePlaceNotes(places, folder, mapName, this.state.mode === "full" ? this.state.settlement : "");
       }
       const block = [
         "```zoommap",
@@ -8550,6 +8575,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
   // (when present), and `size` (the settlement size, when present) are added
   // too so templates / Randomness rolls can read them.
   ensureTypeFrontmatter(body, type, town, subtype, size) {
+    body = body.replace(/\r\n/g, "\n");
     const fmMatch = body.match(/^---\n([\s\S]*?)\n---\n?/);
     const yamlVal = (v) => /[:#\-?\[\]{},&*!|>'"%@`]/.test(v) ? JSON.stringify(v) : v;
     const hasSub = !!(subtype && subtype.trim());
@@ -8603,7 +8629,7 @@ ${body}`;
   }
   // Turn positioned slots into named places.  Each pin type names either via
   // its built-in word lists (default, deterministic, no dependencies) or a
-  // custom JS hook (power users — may call other plugins like Randomness).
+  // custom JS hook (power users \u2014 may call other plugins like Randomness).
   // A failing or empty JS hook falls back to the built-in generator so a bad
   // hook never breaks the export.
   async resolveNames(slots, town) {
@@ -8654,7 +8680,7 @@ ${body}`;
   // ending in a return.  In scope: app, api (Randomness if present), seed,
   // town, type, index, subtypes (the configured subtype list for this pin).
   // May resolve to EITHER a string (the name; subtype empty) OR an object
-  // { name, subtype } — the correlated path, where one roll yields both.
+  // { name, subtype } \u2014 the correlated path, where one roll yields both.
   async runNameHook(body, ctx) {
     const app = this.app;
     const rdm = app.plugins?.plugins?.["randomness"];
@@ -8669,7 +8695,10 @@ ${body}`;
       "subtypes",
       `"use strict"; return (async () => { ${/\breturn\b/.test(body) ? body : `return (${body});`} })();`
     );
-    const out = await fn(app, api, ctx.seed, ctx.town, ctx.type, ctx.index, ctx.subtypes);
+    const out = await Promise.race([
+      Promise.resolve(fn(app, api, ctx.seed, ctx.town, ctx.type, ctx.index, ctx.subtypes)),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("name hook timed out after 5s")), 5e3))
+    ]);
     if (out && typeof out === "object" && !Array.isArray(out)) {
       const name = String(out.name ?? "").trim();
       const subtype = String(out.subtype ?? "").trim();
@@ -8680,8 +8709,8 @@ ${body}`;
   // Write one note per place into the map folder.  When grouping is enabled the
   // note goes into a per-type subfolder (<folder>/<NoteType>/), otherwise flat
   // in <folder>.  Titles are deduped GLOBALLY across the export (not per
-  // subfolder) so wikilinks — which Obsidian resolves by basename, regardless
-  // of folder — stay unambiguous and the pins keep working.  Templates are
+  // subfolder) so wikilinks \u2014 which Obsidian resolves by basename, regardless
+  // of folder \u2014 stay unambiguous and the pins keep working.  Templates are
   // cached per type to avoid re-reading.  Returns counts so the caller can tell
   // the user whether templates were found.
   async writePlaceNotes(places, folder, town, size) {
@@ -8705,12 +8734,9 @@ ${body}`;
         title = `${title} ${n}`;
       }
       usedTitles.add(title.toLowerCase());
+      pl.noteTitle = title;
       let body = tpl !== null ? this.fillTemplate(tpl, pl.name, pl.noteType, town, pl.subtype, size) : this.defaultPlaceNote(pl.name, pl.noteType, town);
       body = this.ensureTypeFrontmatter(body, pl.noteType, town, pl.subtype, size);
-      if (tpl !== null)
-        fromTemplate++;
-      else
-        fromDefault++;
       let destFolder = folder;
       if (group) {
         const sub = this.sanitizeName(pl.noteType) || "Other";
@@ -8721,11 +8747,19 @@ ${body}`;
         }
       }
       const notePath = `${destFolder}/${title}.md`;
+      let written = true;
       if (!this.app.vault.getAbstractFileByPath(notePath)) {
         try {
           await this.app.vault.create(notePath, body);
         } catch (e) {
+          written = false;
         }
+      }
+      if (written) {
+        if (tpl !== null)
+          fromTemplate++;
+        else
+          fromDefault++;
       }
     }
     return { fromTemplate, fromDefault };
@@ -8808,7 +8842,8 @@ ${body}`;
           enabledEdges: this.enabledEdges(),
           overrides: this.overrides()
         });
-        renderFull(ctx, full, genSize, genSize, s.terrain, void 0, void 0, s.name);
+        const baseDist = SIZE_BASE_DISTANCE[s.settlement] ?? LANDSCAPE_BASE_DISTANCE;
+        renderFull(ctx, full, genSize, genSize, s.terrain, baseDist * this.getScaleMultiplier(), this.getDistanceUnit(), s.name);
         this.lastFullScene = full;
         this.lastMapSize = genSize;
         const houses = (full.houses || []).length;
@@ -8816,7 +8851,7 @@ ${body}`;
         this.status.setText(`${nm}${s.terrain} \xB7 ${s.settlement} \xB7 "${s.seed}" \xB7 ${houses} buildings`);
       } else {
         const scene = generateLandscape(s.terrain, s.seed, genSize, genSize, opts);
-        renderScene(ctx, scene, genSize, genSize, s.terrain);
+        renderScene(ctx, scene, genSize, genSize, s.terrain, LANDSCAPE_BASE_DISTANCE * this.getScaleMultiplier(), this.getDistanceUnit());
         this.lastFullScene = null;
         this.lastMapSize = genSize;
         this.status.setText(`${s.terrain} \xB7 landscape \xB7 "${s.seed}"`);
@@ -8864,7 +8899,7 @@ var BUILDING_KEY = [
 
 // src/main.ts
 var VALID_TERRAINS = ["inland", "coastal", "river", "lake", "mountain"];
-// Bundled place-note templates (the "portrait edition") — seeded into
+// Bundled place-note templates (the "portrait edition") \u2014 seeded into
 // the template folder by the "Create place templates" settings button.
 // Canonical copies live in the Randomness repo (community-generators/
 // fantasy-hub/townforge-templates); refresh here at release time.
@@ -9083,7 +9118,7 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
         this.renderBlock(source, el);
       }
     );
-    this.registerView(TOWN_FORGE_VIEW, (leaf) => new TownForgePreviewView(leaf, () => this.settings.exportFolder, () => this.settings.templateFolder, () => this.settings.pinTypes, () => this.settings.openAfterExport, () => this.settings.groupNotesByType, () => this.settings.enableZoomMapExport, () => this.settings.showTroubleshoot));
+    this.registerView(TOWN_FORGE_VIEW, (leaf) => new TownForgePreviewView(leaf, () => this.settings.exportFolder, () => this.settings.templateFolder, () => this.settings.pinTypes, () => this.settings.openAfterExport, () => this.settings.groupNotesByType, () => this.settings.enableZoomMapExport, () => this.settings.showTroubleshoot, () => this.settings.scaleMultiplier, () => this.settings.distanceUnit));
     this.addRibbonIcon("map", "Town Forge: open map preview", () => {
       this.activatePreview();
     });
