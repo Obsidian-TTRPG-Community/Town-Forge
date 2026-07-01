@@ -9274,7 +9274,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     const linkSetting = new import_obsidian2.Setting(containerEl).setName("Get TTRPG Tools: Maps").setDesc("The Obsidian community plugin that renders the exported maps and pins. Opens its install page.");
     linkSetting.addButton(
       (b) => b.setButtonText("Open plugin page").setCta().onClick(() => {
-        window.open("https://obsidian.md/plugins?id=zoom-map");
+        window.open("obsidian://show-plugin?id=zoom-map");
       })
     );
     if (this.plugin.settings.enableZoomMapExport) {
