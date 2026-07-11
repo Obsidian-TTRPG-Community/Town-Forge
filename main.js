@@ -2634,7 +2634,7 @@ function rngShuffle(rng, lst) {
 }
 var OUTBUILDING_COUNTS = {
   // Small settlements get a handful of outlying functional buildings for
-  // character \u2014 a mill, an inn, a stable \u2014 with no generic sprawl (that's a
+  // character — a mill, an inn, a stable — with no generic sprawl (that's a
   // city phenomenon).  Numbers grow with size.
   village: { mill: 1, inn: 1, stable: 1, generic: 0 },
   small_town: { mill: 1, inn: 1, stable: 1, generic: 0 },
@@ -8702,7 +8702,7 @@ ${body}`;
   }
   // Turn positioned slots into named places.  Each pin type names either via
   // its built-in word lists (default, deterministic, no dependencies) or a
-  // custom JS hook (power users \u2014 may call other plugins like Randomness).
+  // custom JS hook (power users — may call other plugins like Randomness).
   // A failing or empty JS hook falls back to the built-in generator so a bad
   // hook never breaks the export.
   async resolveNames(slots, town) {
@@ -8753,7 +8753,7 @@ ${body}`;
   // ending in a return.  In scope: app, api (Randomness if present), seed,
   // town, type, index, subtypes (the configured subtype list for this pin).
   // May resolve to EITHER a string (the name; subtype empty) OR an object
-  // { name, subtype } \u2014 the correlated path, where one roll yields both.
+  // { name, subtype } — the correlated path, where one roll yields both.
   async runNameHook(body, ctx) {
     const app = this.app;
     const rdm = app.plugins?.plugins?.["randomness"];
@@ -8782,8 +8782,8 @@ ${body}`;
   // Write one note per place into the map folder.  When grouping is enabled the
   // note goes into a per-type subfolder (<folder>/<NoteType>/), otherwise flat
   // in <folder>.  Titles are deduped GLOBALLY across the export (not per
-  // subfolder) so wikilinks \u2014 which Obsidian resolves by basename, regardless
-  // of folder \u2014 stay unambiguous and the pins keep working.  Templates are
+  // subfolder) so wikilinks — which Obsidian resolves by basename, regardless
+  // of folder — stay unambiguous and the pins keep working.  Templates are
   // cached per type to avoid re-reading.  Returns counts so the caller can tell
   // the user whether templates were found.
   async writePlaceNotes(places, folder, town, size) {
@@ -8972,7 +8972,7 @@ var BUILDING_KEY = [
 
 // src/main.ts
 var VALID_TERRAINS = ["inland", "coastal", "river", "lake", "mountain"];
-// Bundled place-note templates (the "portrait edition") \u2014 seeded into
+// Bundled place-note templates (the "portrait edition") — seeded into
 // the template folder by the "Create place templates" settings button.
 // Canonical copies live in the Randomness repo (community-generators/
 // fantasy-hub/townforge-templates); refresh here at release time.
@@ -9399,7 +9399,8 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
         })
       );
       new import_obsidian2.Setting(containerEl).setName("Pre-made map content").setDesc("Install the items below to add pre-made templates built to work together with Town Forge, TTRPG Tools - Maps, Randomness, Heraldry Weaver and more \u2014 giving you 1-click maps that self-populate with places, people, items and adventure hooks. Step 1: write the place-note templates. Step 2: send their pin icons to TTRPG Tools - Maps.").setHeading();
-      new import_obsidian2.Setting(containerEl).setName("Create place templates").setDesc('Write the bundled place templates (Shop, Inn, Tavern, Temple, Castle, Barracks and more) into the template folder above. They fill each note with rolled content matching the name Town Forge chose - and with the Randomness plugin (plus its Fantasy Portrait Pack and Fantasy Hub content) every keeper arrives named and portraited. Needs Templater with "Trigger Templater on new file creation" ON. Safe to click again after updates; it overwrites these 15 names only.').addExtraButton(
+      let _tfCreateBtn = null;
+      new import_obsidian2.Setting(containerEl).setName("Create place templates").setDesc('Writes the ready-made place notes (Shop, Inn, Tavern, Castle, Temple and more) into the template folder above. When a place is pinned, the matching note fills itself in with a rolled name, keeper and NPCs. First get the checklist below all green - without the Randomness generators the notes come out blank. Safe to click again after updates; it only overwrites these 15 names.').addExtraButton(
         (b) => b.setIcon("dice").setTooltip("Get Randomness (rolls the content + portraits)").onClick(() => {
           window.open("obsidian://show-plugin?id=randomness");
         })
@@ -9416,15 +9417,89 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
           window.open("obsidian://show-theme?name=ITS%20Theme");
         })
       ).addButton(
-        (b) => b.setButtonText("Create / update").setCta().onClick(async () => {
-          try {
-            const r = await this.plugin.seedPlaceTemplates();
-            new import_obsidian2.Notice(`Town Forge: templates ready in "${this.plugin.settings.templateFolder}" (${r.created} created, ${r.updated} updated).`);
-          } catch (e) {
-            new import_obsidian2.Notice("Town Forge: template creation failed - " + (e && e.message ? e.message : String(e)), 8000);
-          }
-        })
+        (b) => {
+          _tfCreateBtn = b;
+          b.setButtonText("Create / update").setCta().onClick(async () => {
+            try {
+              const r = await this.plugin.seedPlaceTemplates();
+              new import_obsidian2.Notice(`Town Forge: templates ready in "${this.plugin.settings.templateFolder}" (${r.created} created, ${r.updated} updated).`);
+            } catch (e) {
+              new import_obsidian2.Notice("Town Forge: template creation failed - " + (e && e.message ? e.message : String(e)), 8000);
+            }
+          });
+        }
       );
+      const _tfSteps = containerEl.createDiv({ cls: "setting-item-description" });
+      _tfSteps.style.margin = "-0.4em 0 1em 0";
+      _tfSteps.setText("Checking set-up…");
+      (async () => {
+        const app2 = this.app || this.plugin.app;
+        const registry = app2.plugins && app2.plugins.plugins ? app2.plugins.plugins : {};
+        // Step 1 - Randomness enabled with a usable API.
+        const rnd = registry["randomness"] || null;
+        const api = rnd && rnd.api ? rnd.api : null;
+        // Step 4 - Fantasy Hub generators present. TF-Inn is a reliable sentinel;
+        // api.tables() uses the same vault discovery the templates roll through.
+        let hubReady = false, canDetect = !!(api && typeof api.tables === "function");
+        if (canDetect) {
+          try {
+            const names = await api.tables();
+            hubReady = new Set(names.map((n) => String(n).toLowerCase())).has("tf-inn");
+          } catch (e) { canDetect = false; }
+        }
+        // Step 3 - portrait pack (adds NPC faces; templates degrade gracefully without it).
+        let portraitsReady = false;
+        try { portraitsReady = !!(api && api.portraits && await api.portraits.available()); } catch (e) { portraitsReady = false; }
+        // Step 2 - Templater installed with trigger-on-create ON. The toggle is a
+        // device-local setting (app.loadLocalStorage "templater-local-settings"),
+        // NOT in tp.settings; older Templater kept it in tp.settings, so check both.
+        const tp = registry["templater-obsidian"] || null;
+        let tpTrigger = void 0;
+        try {
+          const tpLocal = typeof app2.loadLocalStorage === "function" ? app2.loadLocalStorage("templater-local-settings") : null;
+          if (tpLocal && typeof tpLocal.trigger_on_file_creation === "boolean") tpTrigger = tpLocal.trigger_on_file_creation;
+          else if (tp && tp.settings && typeof tp.settings.trigger_on_file_creation === "boolean") tpTrigger = tp.settings.trigger_on_file_creation;
+        } catch (e) { tpTrigger = void 0; }
+
+        _tfSteps.empty();
+        const head = _tfSteps.createEl("div", { text: "Set-up checklist - do these in order:" });
+        head.style.fontWeight = "600";
+        head.style.margin = "0 0 0.35em 0";
+        const row = (state, text) => {
+          const mark = state === true ? "✅" : state === "warn" ? "⚠️" : "❌";
+          const d = _tfSteps.createEl("div", { text: `${mark} ${text}` });
+          d.style.margin = "0.15em 0";
+          return d;
+        };
+
+        row(!!api, api
+          ? "Step 1 - Randomness plugin installed & on"
+          : "Step 1 - install & enable the Randomness plugin (dice button on the right)");
+
+        if (!tp) row(false, "Step 2 - install & enable Templater (scroll button on the right)");
+        else if (tpTrigger === true) row(true, "Step 2 - Templater set to run on new files");
+        else if (tpTrigger === false) row(false, "Step 2 - in Templater settings, turn ON “Trigger Templater on new file creation”");
+        else row("warn", "Step 2 - make sure Templater’s “Trigger on new file creation” is ON");
+
+        row(portraitsReady ? true : "warn", portraitsReady
+          ? "Step 3 - Fantasy Portrait Pack installed"
+          : "Step 3 - in Randomness settings, click “Install Fantasy Portrait Pack” (needed for Step 4; adds NPC faces)");
+
+        if (canDetect) row(hubReady, hubReady
+          ? "Step 4 - Fantasy Hub content installed, place generators ready"
+          : "Step 4 - in Randomness settings, click “Install Fantasy Hub content” (do Step 3 first)");
+        else row("warn", "Step 4 - in Randomness settings, click “Install Fantasy Hub content” (couldn’t auto-check - older Randomness)");
+
+        const ready = canDetect ? hubReady : !!api;
+        if (_tfCreateBtn) {
+          _tfCreateBtn.setDisabled(!ready);
+          _tfCreateBtn.setButtonText(ready ? "Create / update" : "Create / update - finish the checklist");
+        }
+        const foot = _tfSteps.createEl("div", { text: ready
+          ? "✅ All set - click Create / update, then generate a map and the places fill themselves in."
+          : "⚠️ Finish the red steps first. The button switches on once the Fantasy Hub generators are found." });
+        foot.style.marginTop = "0.4em";
+      })();
             (() => {
         var _app = this.app || this.plugin.app;
         var _mani = _app.plugins && _app.plugins.manifests ? _app.plugins.manifests["zoom-map"] : null;
