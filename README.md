@@ -65,13 +65,42 @@ Full list of keys:
 | `scale` | number | Real-world distance the map width represents |
 | `unit` | text | Scale-bar unit (e.g. `miles`, `km`) |
 | `edges` | `N`, `E`, `S`, `W` (any combination) | Which sides have approach roads |
-| `farms` | `0`–`2` | Farm density multiplier |
-| `forest` | `0`–`2` | Forest density multiplier |
+| `farms` | `0`–`4` | Farm density multiplier |
+| `forest` | `0`–`4` | Forest density multiplier |
 | `seaside` | `N`/`E`/`S`/`W` | Sea direction (coastal) |
 | `mtnedges` | `N`, `E`, `S`, `W` | Sides a mountain range enters from |
 | `mtnsize` / `peaks` | `0`–`12` | Mountain extent |
 | `roughness`, `octaves` | numbers | Terrain noise tuning |
 | `walls`, `castle`, `temple`, `market`, `barracks`, `tower` | `on` / `off` | Force a landmark on or off |
+
+### Map from note Properties
+
+Instead of writing settings inside the block, you can keep them in the note's **Properties** (frontmatter) and leave the block empty. Prefix any key from the table above with `townforge-`, and the map reads them from the note it sits in:
+
+````
+---
+townforge-terrain: river
+townforge-seed: frostkey
+townforge-mode: full
+townforge-settlement: city
+townforge-walls: true
+---
+
+```town-forge
+```
+````
+
+List properties become letter runs (`townforge-edges: [N, E]` → `NE`) and checkbox properties become on/off (handy for `townforge-walls`, `townforge-castle`, …).
+
+You can also draw a map from **another** note's Properties with a `from:` (or `source:`) link — no duplication:
+
+````
+```town-forge
+from: [[Frostkey]]
+```
+````
+
+Explicit lines inside the block always override Properties, so existing blocks behave exactly as before. A missing or empty linked note is reported in the block's "Config notes" line rather than failing.
 
 ### Exporting to TTRPG Tools: Maps
 

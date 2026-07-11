@@ -9019,6 +9019,53 @@ var SIZE_BASE_DISTANCE = {
 };
 var LANDSCAPE_BASE_DISTANCE = 10;
 var VALID_SETTLEMENTS = ["hamlet", "village", "small_town", "town", "large_town", "small_city", "city", "large_city", "metropolis"];
+// Pull a `from: [[Note]]` (or `source: [[Note]]`) line out of a map block, so a
+// block can draw a map from ANOTHER note's Properties. Returns { linkpath } or null.
+function extractSourceLink(source) {
+  for (const rawLine of source.split("\n")) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#"))
+      continue;
+    const idx = line.indexOf(":");
+    if (idx === -1)
+      continue;
+    const key = line.slice(0, idx).trim().toLowerCase();
+    if (key === "from" || key === "source") {
+      const val = line.slice(idx + 1).trim();
+      const m = /\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]/.exec(val);
+      const linkpath = m ? m[1].trim() : val.replace(/^["']|["']$/g, "").trim();
+      return { linkpath: linkpath || null };
+    }
+  }
+  return null;
+}
+// Turn `townforge-<key>` / `townforge_<key>` note Properties into the same
+// "key: value" lines parseConfig already understands. Lists become joined
+// letters (edges: [N, E] -> "NE"); booleans become on/off (checkbox landmarks).
+function frontmatterToConfigLines(fm) {
+  const lines = [];
+  if (!fm || typeof fm !== "object")
+    return lines;
+  for (const rawKey of Object.keys(fm)) {
+    const m = /^townforge[-_](.+)$/i.exec(rawKey);
+    if (!m)
+      continue;
+    const key = m[1].trim().toLowerCase();
+    if (!key)
+      continue;
+    let val = fm[rawKey];
+    if (val === null || val === void 0)
+      continue;
+    if (Array.isArray(val))
+      val = val.join("");
+    else if (typeof val === "boolean")
+      val = val ? "on" : "off";
+    const text = String(val).trim();
+    if (text)
+      lines.push(`${key}: ${text}`);
+  }
+  return lines;
+}
 function parseConfig(source) {
   const errors = [];
   const config = {
@@ -9172,6 +9219,9 @@ function parseConfig(source) {
         config.landmarks[lmKey] = on;
         break;
       }
+      case "from":
+      case "source":
+        break;
       default:
         errors.push(`Unknown key "${key}"`);
     }
@@ -9187,8 +9237,8 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
     await this.loadSettings();
     this.registerMarkdownCodeBlockProcessor(
       "town-forge",
-      (source, el, _ctx) => {
-        this.renderBlock(source, el);
+      (source, el, ctx) => {
+        this.renderBlock(source, el, ctx);
       }
     );
     this.registerView(TOWN_FORGE_VIEW, (leaf) => new TownForgePreviewView(leaf, () => this.settings.exportFolder, () => this.settings.templateFolder, () => this.settings.pinTypes, () => this.settings.openAfterExport, () => this.settings.groupNotesByType, () => this.settings.enableZoomMapExport, () => this.settings.showTroubleshoot, () => this.settings.scaleMultiplier, () => this.settings.distanceUnit));
@@ -9274,8 +9324,43 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
       workspace.revealLeaf(leaf);
     }
   }
-  renderBlock(source, el) {
-    const { config, errors } = parseConfig(source);
+  // Merge note Properties into a map block. Base layer comes from frontmatter -
+  // either the note the block sits in, or, if the block has `from: [[Note]]`,
+  // that other note. Explicit lines in the block always win over Properties.
+  applyPropertyConfig(source, ctx) {
+    const extraErrors = [];
+    const app = this.app;
+    let fm = null;
+    const link = extractSourceLink(source);
+    if (link && link.linkpath) {
+      const dest = app.metadataCache ? app.metadataCache.getFirstLinkpathDest(link.linkpath, ctx && ctx.sourcePath ? ctx.sourcePath : "") : null;
+      if (dest) {
+        const cache = app.metadataCache.getFileCache(dest);
+        fm = cache && cache.frontmatter ? cache.frontmatter : null;
+        if (!fm)
+          extraErrors.push(`from [[${link.linkpath}]]: that note has no Properties yet`);
+      } else {
+        extraErrors.push(`from [[${link.linkpath}]]: note not found`);
+      }
+    } else {
+      fm = ctx && ctx.frontmatter ? ctx.frontmatter : null;
+      if (!fm && ctx && ctx.sourcePath && app.vault) {
+        const self = app.vault.getAbstractFileByPath(ctx.sourcePath);
+        if (self && app.metadataCache) {
+          const cache = app.metadataCache.getFileCache(self);
+          fm = cache && cache.frontmatter ? cache.frontmatter : null;
+        }
+      }
+    }
+    const fmLines = frontmatterToConfigLines(fm);
+    const merged = fmLines.length ? fmLines.join("\n") + "\n" + source : source;
+    return { source: merged, errors: extraErrors };
+  }
+  renderBlock(source, el, ctx) {
+    const applied = this.applyPropertyConfig(source, ctx);
+    const { config, errors } = parseConfig(applied.source);
+    for (const m of applied.errors)
+      errors.push(m);
     const wrap = el.createDiv({ cls: "town-forge-map" });
     wrap.style.margin = "0.5em 0";
     try {
