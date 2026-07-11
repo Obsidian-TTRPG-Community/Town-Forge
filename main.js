@@ -8287,14 +8287,26 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       e.preventDefault();
       this.resetView();
     });
-    this.status = root.createDiv();
+    const footer = root.createDiv();
+    footer.style.position = "sticky";
+    footer.style.bottom = "0";
+    footer.style.marginTop = "auto";
+    footer.style.display = "flex";
+    footer.style.flexDirection = "column";
+    footer.style.gap = "6px";
+    footer.style.paddingTop = "6px";
+    footer.style.background = "var(--background-secondary)";
+    footer.style.borderTop = "1px solid var(--background-modifier-border)";
+    footer.style.zIndex = "3";
+    this.status = footer.createDiv();
     this.status.style.fontSize = "0.72em";
     this.status.style.opacity = "0.6";
-    const genRow = root.createDiv();
+    const genRow = footer.createDiv();
     genRow.style.display = "flex";
+    genRow.style.flexWrap = "wrap";
     genRow.style.gap = "6px";
     this.generateBtn = genRow.createEl("button", { text: "Generate" });
-    this.generateBtn.style.flex = "2";
+    this.generateBtn.style.flex = "2 1 120px";
     this.generateBtn.style.fontWeight = "600";
     this.generateBtn.style.padding = "8px";
     this.generateBtn.onclick = () => {
@@ -8308,29 +8320,31 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     };
     const regenBtn = genRow.createEl("button", { text: "\u21BB Same seed" });
     regenBtn.setAttr("aria-label", "Regenerate with the same seed");
-    regenBtn.style.flex = "1";
+    regenBtn.style.flex = "1 1 100px";
     regenBtn.onclick = () => {
       this.stale = false;
       this.refresh();
     };
-    const actions = root.createDiv();
+    const actions = footer.createDiv();
     actions.style.display = "flex";
+    actions.style.flexWrap = "wrap";
     actions.style.gap = "6px";
     const copyBtn = actions.createEl("button", { text: "Copy code" });
-    copyBtn.style.flex = "1";
+    copyBtn.style.flex = "1 1 90px";
     copyBtn.onclick = async () => {
       await navigator.clipboard.writeText(this.codeBlock());
       new import_obsidian.Notice("Town Forge: code block copied");
     };
     const insertBtn = actions.createEl("button", { text: "Insert" });
-    insertBtn.style.flex = "1";
+    insertBtn.style.flex = "1 1 90px";
     insertBtn.onclick = () => this.insertIntoNote();
     const saveBtn = actions.createEl("button", { text: "Save PNG" });
-    saveBtn.style.flex = "1";
+    saveBtn.style.flex = "1 1 90px";
     saveBtn.onclick = () => this.saveToVault();
     if (this.getEnableZoomMapExport()) {
       const exportBtn = actions.createEl("button", { text: "Export to TTRPG Tools: Maps" });
-      exportBtn.style.flex = "1";
+      exportBtn.style.flex = "1 1 100%";
+      exportBtn.style.whiteSpace = "nowrap";
       exportBtn.setAttr("aria-label", "Create a folder + PNG + note with a zoommap block in the configured export folder");
       exportBtn.onclick = async () => {
         const _label = exportBtn.textContent;
@@ -8349,7 +8363,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       };
     }
     if (this.getShowTroubleshoot()) {
-      const troubleRow = root.createDiv();
+      const troubleRow = footer.createDiv();
       troubleRow.style.display = "flex";
       troubleRow.style.marginTop = "2px";
       const troubleBtn = troubleRow.createEl("button", { text: "\u{1F41E} Copy config for support" });
@@ -9274,8 +9288,35 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
    * is the source of truth; keep customised copies under different
    * names). Returns { created, updated }.
    */
+  // Add the template folder to Templater's excluded-folders list so Templater's
+  // "trigger on new file creation" doesn't execute the template files as we write
+  // them (which would prompt for town/size and could overwrite the templates).
+  // Stamped place notes live in the export folder, which stays un-excluded.
+  ensureTemplaterIgnores(folder) {
+    try {
+      const reg = this.app.plugins && this.app.plugins.plugins ? this.app.plugins.plugins : null;
+      const tp = reg ? reg["templater-obsidian"] : null;
+      if (!tp || !tp.settings || !Array.isArray(tp.settings.ignore_folders_on_creation))
+        return false;
+      const norm = String(folder).replace(/\/+$/, "");
+      const has = tp.settings.ignore_folders_on_creation.some(
+        (e) => e && typeof e.folder === "string" && e.folder.replace(/\/+$/, "") === norm
+      );
+      if (has)
+        return false;
+      tp.settings.ignore_folders_on_creation.push({ folder: norm });
+      if (typeof tp.save_settings === "function")
+        tp.save_settings();
+      else if (typeof tp.saveSettings === "function")
+        tp.saveSettings();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
   async seedPlaceTemplates() {
     const folder = this.settings.templateFolder || "Templates/TownForge";
+    const excluded = this.ensureTemplaterIgnores(folder);
     const vault = this.app.vault;
     if (!vault.getAbstractFileByPath(folder)) {
       try {
@@ -9295,7 +9336,7 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
         created++;
       }
     }
-    return { created, updated };
+    return { created, updated, excluded };
   }
   async saveSettings() {
     await this.saveData(this.settings);
@@ -9507,7 +9548,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
           b.setButtonText("Create / update").setCta().onClick(async () => {
             try {
               const r = await this.plugin.seedPlaceTemplates();
-              new import_obsidian2.Notice(`Town Forge: templates ready in "${this.plugin.settings.templateFolder}" (${r.created} created, ${r.updated} updated).`);
+              new import_obsidian2.Notice(`Town Forge: templates ready in "${this.plugin.settings.templateFolder}" (${r.created} created, ${r.updated} updated).` + (r.excluded ? " Added it to Templater's excluded folders so Templater won't auto-run the templates." : ""), r.excluded ? 9000 : 4000);
             } catch (e) {
               new import_obsidian2.Notice("Town Forge: template creation failed - " + (e && e.message ? e.message : String(e)), 8000);
             }
