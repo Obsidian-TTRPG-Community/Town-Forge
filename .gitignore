@@ -1,0 +1,13 @@
+# npm
+node_modules/
+package-lock.json
+
+# build / editor
+*.js.map
+.DS_Store
+
+# esbuild dev-build scratch
+main.rebuilt.js
+
+# transfer scratch (safe to delete)
+_to_delete/
