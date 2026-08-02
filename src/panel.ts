@@ -785,20 +785,20 @@ export var TownForgePreviewView = class extends ItemView {
     if (fmMatch) {
       let fm = fmMatch[1];
       if (/^type\s*:/m.test(fm))
-        fm = fm.replace(/^type\s*:.*$/m, `type: ${yamlVal(type)}`);
+        fm = fm.replace(/^type\s*:.*$/m, () => `type: ${yamlVal(type)}`);
       else
         fm = `type: ${yamlVal(type)}
 ${fm}`;
       if (hasSub) {
         if (/^subtype\s*:/m.test(fm))
-          fm = fm.replace(/^subtype\s*:.*$/m, `subtype: ${yamlVal(subtype)}`);
+          fm = fm.replace(/^subtype\s*:.*$/m, () => `subtype: ${yamlVal(subtype)}`);
         else
           fm = `${fm}
 subtype: ${yamlVal(subtype)}`;
       }
       if (hasSize) {
         if (/^size\s*:/m.test(fm))
-          fm = fm.replace(/^size\s*:.*$/m, `size: ${yamlVal(size)}`);
+          fm = fm.replace(/^size\s*:.*$/m, () => `size: ${yamlVal(size)}`);
         else
           fm = `${fm}
 size: ${yamlVal(size)}`;
@@ -806,7 +806,7 @@ size: ${yamlVal(size)}`;
       if (!/^town\s*:/m.test(fm))
         fm = `${fm}
 town: ${yamlVal(town)}`;
-      return body.replace(fmMatch[0], `---
+      return body.replace(fmMatch[0], () => `---
 ${fm}
 ---
 `);
@@ -823,7 +823,7 @@ ${body}`;
   }
   // Fill {{name}}, {{type}}, {{subtype}}, {{size}}, {{town}} tokens; Randomness syntax is left intact.
   fillTemplate(tpl, name, type, town, subtype, size) {
-    return tpl.replace(/\{\{\s*name\s*\}\}/g, name).replace(/\{\{\s*type\s*\}\}/g, type).replace(/\{\{\s*subtype\s*\}\}/g, subtype ?? "").replace(/\{\{\s*size\s*\}\}/g, size ?? "").replace(/\{\{\s*town\s*\}\}/g, town);
+    return tpl.replace(/\{\{\s*name\s*\}\}/g, () => name).replace(/\{\{\s*type\s*\}\}/g, () => type).replace(/\{\{\s*subtype\s*\}\}/g, () => subtype ?? "").replace(/\{\{\s*size\s*\}\}/g, () => size ?? "").replace(/\{\{\s*town\s*\}\}/g, () => town);
   }
   // Built-in fallback note when no template exists for a type.
   defaultPlaceNote(name, type, town) {
