@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-02
+
+### Added
+
+- **Unique NPC names across a town.** Place templates now draw NPC names from
+  the Fantasy Hub's new `TF-PersonName` pool (tens of thousands of race- and
+  gender-appropriate names, versus the few hundred the portrait module's
+  built-in list could produce) and check each one against a `cast` list kept in
+  the map folder's town note. A name already used elsewhere in the settlement is
+  rerolled, and the town note ends up with a roster of everyone the map named.
+  Falls back to the portrait's own name — and to plain rolls — when the Fantasy
+  Hub content or the town note isn't there, so a template used on its own still
+  works.
+- **Heraldry Weaver in the set-up checklist.** The castle and guild templates
+  render their crests through Heraldry Weaver, so it now appears as step 3 of
+  *Create place templates*, alongside the existing shield button that installs
+  it. Installed-but-disabled is reported separately from not-installed. Like the
+  Templater step it doesn't gate the button — only the Fantasy Hub check does.
+
 ## [1.1.1] - 2026-07-11
 
 ### Fixed
@@ -61,6 +80,7 @@ preview panel, code blocks, and TTRPG Tools: Maps export). These predate this
 changelog — see the [commit history](https://github.com/Obsidian-TTRPG-Community/Town-Forge/commits/main)
 for details.
 
-[Unreleased]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.1.1...HEAD
+[Unreleased]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.1.1...1.2.0
 [1.1.1]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.0.4...1.1.0
