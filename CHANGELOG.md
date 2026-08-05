@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-08-05
+
+Maintenance release: no gameplay or generation changes. It clears the two errors
+raised by the Obsidian community-plugin review of 1.2.0.
+
+### Changed
+
+- **Styling moved out of the code and into `styles.css`.** All 218 inline
+  `element.style.*` assignments in the settings tab, the rendered map block and
+  the preview panel are now CSS classes (`tf-s-*` for the settings/render side,
+  `tf-p-*` for the panel), so themes and CSS snippets can finally restyle Town
+  Forge. The handful of genuinely dynamic values — pan/zoom transform, per-field
+  widths, drag cursor, tri-state landmark buttons, row visibility — use
+  `setCssStyles`/`toggleClass` instead. Nothing looks different.
+- **`minAppVersion` raised to 1.7.2**, which is the version that introduced the
+  awaitable `Workspace.revealLeaf` the panel uses.
+- **The plugin's own settings object is no longer called `settings`.** Obsidian
+  1.13 added a `settings` property to `Plugin` itself; ours is now `tfSettings`
+  so the two can't collide. Saved settings are untouched — the on-disk format
+  and `data.json` are unchanged.
+- Release assets are now attested with GitHub build provenance, `styles.css`
+  ships alongside `main.js`/`manifest.json`, and `versions.json` is no longer
+  attached (Obsidian never downloaded it). A committed `package-lock.json` makes
+  the build byte-for-byte reproducible.
+- Minor lint tidy-ups: `createEl("div"|"span")` → `createDiv`/`createSpan`, and
+  `setTimeout` → `window.setTimeout` for popout-window compatibility.
+
 ## [1.2.0] - 2026-08-02
 
 ### Added

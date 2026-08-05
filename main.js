@@ -8049,42 +8049,20 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
   async onOpen() {
     const root = this.contentEl;
     root.empty();
-    root.addClass("town-forge-panel");
-    root.style.padding = "10px";
-    root.style.display = "flex";
-    root.style.flexDirection = "column";
-    root.style.gap = "8px";
-    root.style.overflowY = "auto";
-    const title = root.createEl("h4", { text: "Town Forge" });
-    title.style.margin = "0 0 2px 0";
-    const controls = root.createDiv();
-    controls.style.display = "flex";
-    controls.style.flexDirection = "column";
-    controls.style.gap = "5px";
+    root.addClass("town-forge-panel", "tf-p-root");
+    root.createEl("h4", { text: "Town Forge", cls: "tf-p-title" });
+    const controls = root.createDiv({ cls: "tf-p-controls" });
     const row = (labelText) => {
-      const r = controls.createDiv();
-      r.style.display = "flex";
-      r.style.alignItems = "center";
-      r.style.justifyContent = "space-between";
-      r.style.gap = "8px";
-      const lab = r.createEl("label", { text: labelText });
-      lab.style.fontSize = "0.78em";
-      lab.style.opacity = "0.85";
-      lab.style.minWidth = "82px";
+      const r = controls.createDiv({ cls: "tf-p-row" });
+      r.createEl("label", { text: labelText, cls: "tf-p-row-label" });
       return r;
     };
     const sectionLabel = (t) => {
-      const s = controls.createEl("div", { text: t });
-      s.style.fontSize = "0.68em";
-      s.style.textTransform = "uppercase";
-      s.style.letterSpacing = "0.06em";
-      s.style.opacity = "0.5";
-      s.style.marginTop = "2px";
+      const s = controls.createDiv({ text: t, cls: "tf-p-section-label" });
       return s;
     };
     const dropdown = (parent, opts, cur, onChange) => {
-      const sel = parent.createEl("select");
-      sel.style.flex = "1";
+      const sel = parent.createEl("select", { cls: "tf-p-select" });
       for (const o of opts) {
         const opt = sel.createEl("option", { text: o, value: o });
         if (o === cur)
@@ -8095,10 +8073,8 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     };
     sectionLabel("Identity");
     const nameRow = row("Name");
-    const nameInput = nameRow.createEl("input", { type: "text", value: this.state.name, placeholder: "(random)" });
+    const nameInput = nameRow.createEl("input", { type: "text", value: this.state.name, placeholder: "(random)", cls: "tf-p-text-input" });
     this.nameInputEl = nameInput;
-    nameInput.style.flex = "1";
-    nameInput.style.minWidth = "0";
     nameInput.onchange = () => {
       this.state.name = nameInput.value;
       this.markStaleOrRefresh(false);
@@ -8110,10 +8086,8 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       this.markStaleOrRefresh(false);
     };
     const seedRow = row("Seed");
-    const seedInput = seedRow.createEl("input", { type: "text", value: this.state.seed });
+    const seedInput = seedRow.createEl("input", { type: "text", value: this.state.seed, cls: "tf-p-text-input" });
     this.seedInputEl = seedInput;
-    seedInput.style.flex = "1";
-    seedInput.style.minWidth = "0";
     seedInput.onchange = () => {
       this.state.seed = seedInput.value || "townforge";
       this.markStaleOrRefresh(true);
@@ -8148,21 +8122,13 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     });
     sectionLabel("Approach roads");
     const roadsRow = row("Edges");
-    const autoLab = roadsRow.createEl("label");
-    autoLab.style.display = "flex";
-    autoLab.style.alignItems = "center";
-    autoLab.style.gap = "3px";
-    autoLab.style.fontSize = "0.75em";
+    const autoLab = roadsRow.createEl("label", { cls: "tf-p-auto-label" });
     const autoCb = autoLab.createEl("input", { type: "checkbox" });
     autoCb.checked = this.state.edgesAuto;
     autoLab.createSpan({ text: "auto" });
     const edgeBoxes = {};
     for (const e of ["N", "E", "S", "W"]) {
-      const l = roadsRow.createEl("label");
-      l.style.display = "flex";
-      l.style.alignItems = "center";
-      l.style.gap = "2px";
-      l.style.fontSize = "0.75em";
+      const l = roadsRow.createEl("label", { cls: "tf-p-edge-label" });
       const cb = l.createEl("input", { type: "checkbox" });
       cb.checked = this.state.edges[e];
       cb.disabled = this.state.edgesAuto;
@@ -8182,17 +8148,12 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     sectionLabel("Density");
     const slider = (labelText, min, max, step, val, fmt, onChange) => {
       const r = row(labelText);
-      const s = r.createEl("input", { type: "range" });
+      const s = r.createEl("input", { type: "range", cls: "tf-p-slider" });
       s.min = String(min);
       s.max = String(max);
       s.step = String(step);
       s.value = String(val);
-      s.style.flex = "1";
-      const out = r.createEl("span", { text: fmt(val) });
-      out.style.fontSize = "0.72em";
-      out.style.minWidth = "30px";
-      out.style.textAlign = "right";
-      out.style.opacity = "0.7";
+      const out = r.createSpan({ text: fmt(val), cls: "tf-p-slider-out" });
       s.oninput = () => {
         out.setText(fmt(parseFloat(s.value)));
       };
@@ -8215,11 +8176,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     this.mtnSideRowEl = mtnRow;
     const mtnEdgeBoxes = {};
     for (const e of ["N", "E", "S", "W"]) {
-      const l = mtnRow.createEl("label");
-      l.style.display = "flex";
-      l.style.alignItems = "center";
-      l.style.gap = "2px";
-      l.style.fontSize = "0.75em";
+      const l = mtnRow.createEl("label", { cls: "tf-p-edge-label" });
       const cb = l.createEl("input", { type: "checkbox" });
       cb.checked = this.state.mountainEdges[e];
       cb.onchange = () => {
@@ -8229,27 +8186,19 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       l.createSpan({ text: e });
       mtnEdgeBoxes[e] = cb;
     }
-    const mtnNote = mtnRow.createEl("span", { text: "overlay" });
-    mtnNote.style.fontSize = "0.6em";
-    mtnNote.style.opacity = "0.4";
+    mtnRow.createSpan({ text: "overlay", cls: "tf-p-mtn-note" });
     this.landmarksSection = sectionLabel("Landmarks");
-    const triRow = controls.createDiv();
+    const triRow = controls.createDiv({ cls: "tf-p-tri-row" });
     this.landmarksRowEl = triRow;
-    triRow.style.display = "flex";
-    triRow.style.flexWrap = "wrap";
-    triRow.style.gap = "5px";
     const triBtn = (labelText, key) => {
-      const b = triRow.createEl("button");
+      const b = triRow.createEl("button", { cls: "tf-p-tri-btn" });
       const paint = () => {
         const st = this.state[key];
         b.setText(`${labelText}: ${TRI_LABEL[st]}`);
-        b.style.opacity = st === "auto" ? "0.6" : "1";
-        b.style.fontWeight = st === "on" ? "600" : "400";
-        b.style.textDecoration = st === "off" ? "line-through" : "none";
+        b.toggleClass("tf-p-tri-auto", st === "auto");
+        b.toggleClass("tf-p-tri-on", st === "on");
+        b.toggleClass("tf-p-tri-off", st === "off");
       };
-      b.style.fontSize = "0.72em";
-      b.style.flex = "1";
-      b.style.minWidth = "70px";
       b.onclick = () => {
         this.state[key] = TRI_NEXT[this.state[key]];
         paint();
@@ -8263,42 +8212,15 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
     triBtn("Market", "market");
     triBtn("Barracks", "barracks");
     triBtn("Tower", "tower");
-    const canvasWrap = root.createDiv();
-    canvasWrap.style.marginTop = "4px";
-    const viewport = canvasWrap.createDiv();
+    const canvasWrap = root.createDiv({ cls: "tf-p-canvas-wrap" });
+    const viewport = canvasWrap.createDiv({ cls: "tf-p-viewport" });
     this.viewport = viewport;
-    viewport.style.position = "relative";
-    viewport.style.width = "100%";
-    viewport.style.overflow = "hidden";
-    viewport.style.borderRadius = "6px";
-    viewport.style.cursor = "grab";
-    viewport.style.touchAction = "none";
-    this.canvas = viewport.createEl("canvas");
-    this.canvas.style.width = "100%";
-    this.canvas.style.height = "auto";
-    this.canvas.style.display = "block";
-    this.canvas.style.transformOrigin = "0 0";
-    this.canvas.style.willChange = "transform";
-    const zoomBar = viewport.createDiv();
-    zoomBar.style.position = "absolute";
-    zoomBar.style.top = "6px";
-    zoomBar.style.right = "6px";
-    zoomBar.style.display = "flex";
-    zoomBar.style.flexDirection = "column";
-    zoomBar.style.gap = "3px";
-    zoomBar.style.zIndex = "2";
+    this.canvas = viewport.createEl("canvas", { cls: "tf-p-canvas" });
+    const zoomBar = viewport.createDiv({ cls: "tf-p-zoom-bar" });
     zoomBar.addEventListener("pointerdown", (e) => e.stopPropagation());
     const mkZoomBtn = (label, aria, fn) => {
-      const b = zoomBar.createEl("button", { text: label });
+      const b = zoomBar.createEl("button", { text: label, cls: "tf-p-zoom-btn" });
       b.setAttr("aria-label", aria);
-      b.style.width = "26px";
-      b.style.height = "26px";
-      b.style.padding = "0";
-      b.style.fontSize = "15px";
-      b.style.lineHeight = "1";
-      b.style.fontWeight = "600";
-      b.style.opacity = "0.85";
-      b.style.cursor = "pointer";
       b.onclick = (e) => {
         e.preventDefault();
         fn();
@@ -8322,7 +8244,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       dragging = true;
       lastX = e.clientX;
       lastY = e.clientY;
-      viewport.style.cursor = "grabbing";
+      viewport.toggleClass("tf-p-dragging", true);
       viewport.setPointerCapture(e.pointerId);
     });
     viewport.addEventListener("pointermove", (e) => {
@@ -8339,7 +8261,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       if (!dragging)
         return;
       dragging = false;
-      viewport.style.cursor = "grab";
+      viewport.toggleClass("tf-p-dragging", false);
       try {
         viewport.releasePointerCapture(e.pointerId);
       } catch (e2) {
@@ -8351,28 +8273,10 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       e.preventDefault();
       this.resetView();
     });
-    const footer = root.createDiv();
-    footer.style.position = "sticky";
-    footer.style.bottom = "0";
-    footer.style.marginTop = "auto";
-    footer.style.display = "flex";
-    footer.style.flexDirection = "column";
-    footer.style.gap = "6px";
-    footer.style.paddingTop = "6px";
-    footer.style.background = "var(--background-secondary)";
-    footer.style.borderTop = "1px solid var(--background-modifier-border)";
-    footer.style.zIndex = "3";
-    this.status = footer.createDiv();
-    this.status.style.fontSize = "0.72em";
-    this.status.style.opacity = "0.6";
-    const genRow = footer.createDiv();
-    genRow.style.display = "flex";
-    genRow.style.flexWrap = "wrap";
-    genRow.style.gap = "6px";
-    this.generateBtn = genRow.createEl("button", { text: "Generate" });
-    this.generateBtn.style.flex = "2 1 120px";
-    this.generateBtn.style.fontWeight = "600";
-    this.generateBtn.style.padding = "8px";
+    const footer = root.createDiv({ cls: "tf-p-footer" });
+    this.status = footer.createDiv({ cls: "tf-p-status" });
+    const genRow = footer.createDiv({ cls: "tf-p-btn-row" });
+    this.generateBtn = genRow.createEl("button", { text: "Generate", cls: "tf-p-generate-btn" });
     this.generateBtn.onclick = () => {
       this.state.seed = randomSeed();
       this.seedInputEl.value = this.state.seed;
@@ -8382,33 +8286,24 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       this.stale = false;
       this.refresh();
     };
-    const regenBtn = genRow.createEl("button", { text: "\u21BB Same seed" });
+    const regenBtn = genRow.createEl("button", { text: "\u21BB Same seed", cls: "tf-p-regen-btn" });
     regenBtn.setAttr("aria-label", "Regenerate with the same seed");
-    regenBtn.style.flex = "1 1 100px";
     regenBtn.onclick = () => {
       this.stale = false;
       this.refresh();
     };
-    const actions = footer.createDiv();
-    actions.style.display = "flex";
-    actions.style.flexWrap = "wrap";
-    actions.style.gap = "6px";
-    const copyBtn = actions.createEl("button", { text: "Copy code" });
-    copyBtn.style.flex = "1 1 90px";
+    const actions = footer.createDiv({ cls: "tf-p-btn-row" });
+    const copyBtn = actions.createEl("button", { text: "Copy code", cls: "tf-p-action-btn" });
     copyBtn.onclick = async () => {
       await navigator.clipboard.writeText(this.codeBlock());
       new import_obsidian.Notice("Town Forge: code block copied");
     };
-    const insertBtn = actions.createEl("button", { text: "Insert" });
-    insertBtn.style.flex = "1 1 90px";
+    const insertBtn = actions.createEl("button", { text: "Insert", cls: "tf-p-action-btn" });
     insertBtn.onclick = () => this.insertIntoNote();
-    const saveBtn = actions.createEl("button", { text: "Save PNG" });
-    saveBtn.style.flex = "1 1 90px";
+    const saveBtn = actions.createEl("button", { text: "Save PNG", cls: "tf-p-action-btn" });
     saveBtn.onclick = () => this.saveToVault();
     if (this.getEnableZoomMapExport()) {
-      const exportBtn = actions.createEl("button", { text: "Export to TTRPG Tools: Maps" });
-      exportBtn.style.flex = "1 1 100%";
-      exportBtn.style.whiteSpace = "nowrap";
+      const exportBtn = actions.createEl("button", { text: "Export to TTRPG Tools: Maps", cls: "tf-p-export-btn" });
       exportBtn.setAttr("aria-label", "Create a folder + PNG + note with a zoommap block in the configured export folder");
       exportBtn.onclick = async () => {
         const _label = exportBtn.textContent;
@@ -8427,13 +8322,9 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
       };
     }
     if (this.getShowTroubleshoot()) {
-      const troubleRow = footer.createDiv();
-      troubleRow.style.display = "flex";
-      troubleRow.style.marginTop = "2px";
-      const troubleBtn = troubleRow.createEl("button", { text: "\u{1F41E} Copy config for support" });
+      const troubleRow = footer.createDiv({ cls: "tf-p-trouble-row" });
+      const troubleBtn = troubleRow.createEl("button", { text: "\u{1F41E} Copy config for support", cls: "tf-p-trouble-btn" });
       troubleBtn.setAttr("aria-label", "Copy the full settings used for this map, to report an issue");
-      troubleBtn.style.flex = "1";
-      troubleBtn.style.fontSize = "0.78em";
       troubleBtn.onclick = async () => {
         await navigator.clipboard.writeText(this.troubleshootConfig());
         new import_obsidian.Notice("Town Forge: full config copied \u2014 paste it to report an issue");
@@ -8444,17 +8335,17 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
   }
   updateVisibility() {
     const full = this.state.mode === "full";
-    this.settlementRowEl.style.display = full ? "flex" : "none";
+    this.settlementRowEl.toggleClass("tf-p-hidden", !full);
     if (this.dirRowEl)
-      this.dirRowEl.style.display = this.state.terrain === "coastal" ? "flex" : "none";
+      this.dirRowEl.toggleClass("tf-p-hidden", this.state.terrain !== "coastal");
     if (this.mtnSideRowEl)
-      this.mtnSideRowEl.style.display = this.state.terrain === "mountain" ? "none" : "flex";
+      this.mtnSideRowEl.toggleClass("tf-p-hidden", this.state.terrain === "mountain");
     const isCity = ["small_city", "city", "large_city", "metropolis"].includes(this.state.settlement);
     const showLandmarks = full && isCity;
     if (this.landmarksSection)
-      this.landmarksSection.style.display = showLandmarks ? "block" : "none";
+      this.landmarksSection.toggleClass("tf-p-hidden", !showLandmarks);
     if (this.landmarksRowEl)
-      this.landmarksRowEl.style.display = showLandmarks ? "flex" : "none";
+      this.landmarksRowEl.toggleClass("tf-p-hidden", !showLandmarks);
   }
   // Mark the preview stale (waiting for Generate) for expensive maps; refresh
   // immediately for cheap ones.  "Cheap" = last generation was fast.
@@ -8471,7 +8362,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
   paintStale() {
     if (this.generateBtn) {
       this.generateBtn.setText("Generate \u25CF");
-      this.generateBtn.style.opacity = "1";
+      this.generateBtn.setCssStyles({ opacity: "1" });
     }
     this.status.setText("Settings changed \u2014 press Generate to update.");
   }
@@ -8851,7 +8742,7 @@ ${body}`;
     );
     const out = await Promise.race([
       Promise.resolve(fn(app, api, ctx.seed, ctx.town, ctx.type, ctx.index, ctx.subtypes)),
-      new Promise((_, rej) => setTimeout(() => rej(new Error("name hook timed out after 5s")), 5e3))
+      new Promise((_, rej) => window.setTimeout(() => rej(new Error("name hook timed out after 5s")), 5e3))
     ]);
     if (out && typeof out === "object" && !Array.isArray(out)) {
       const name = String((_c = out.name) != null ? _c : "").trim();
@@ -8922,7 +8813,7 @@ ${body}`;
   applyView() {
     if (!this.canvas)
       return;
-    this.canvas.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
+    this.canvas.setCssStyles({ transform: `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})` });
   }
   clampPan() {
     const vw = this.viewport.clientWidth;
@@ -11034,7 +10925,7 @@ function parseConfig(source) {
 var TownForgePlugin = class extends import_obsidian2.Plugin {
   constructor() {
     super(...arguments);
-    this.settings = DEFAULT_SETTINGS;
+    this.tfSettings = DEFAULT_SETTINGS;
   }
   async onload() {
     await this.loadSettings();
@@ -11044,7 +10935,7 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
         this.renderBlock(source, el, ctx);
       }
     );
-    this.registerView(TOWN_FORGE_VIEW, (leaf) => new TownForgePreviewView(leaf, () => this.settings.exportFolder, () => this.settings.templateFolder, () => this.settings.pinTypes, () => this.settings.openAfterExport, () => this.settings.groupNotesByType, () => this.settings.enableZoomMapExport, () => this.settings.showTroubleshoot, () => this.settings.scaleMultiplier, () => this.settings.distanceUnit));
+    this.registerView(TOWN_FORGE_VIEW, (leaf) => new TownForgePreviewView(leaf, () => this.tfSettings.exportFolder, () => this.tfSettings.templateFolder, () => this.tfSettings.pinTypes, () => this.tfSettings.openAfterExport, () => this.tfSettings.groupNotesByType, () => this.tfSettings.enableZoomMapExport, () => this.tfSettings.showTroubleshoot, () => this.tfSettings.scaleMultiplier, () => this.tfSettings.distanceUnit));
     this.addRibbonIcon("map", "Town Forge: open map preview", () => {
       this.activatePreview();
     });
@@ -11056,16 +10947,16 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
     this.addSettingTab(new TownForgeSettingTab(this.app, this));
   }
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    if (!Array.isArray(this.settings.pinTypes) || this.settings.pinTypes.length === 0) {
-      this.settings.pinTypes = DEFAULT_PIN_TYPES.map((t) => ({ ...t }));
+    this.tfSettings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    if (!Array.isArray(this.tfSettings.pinTypes) || this.tfSettings.pinTypes.length === 0) {
+      this.tfSettings.pinTypes = DEFAULT_PIN_TYPES.map((t) => ({ ...t }));
     } else {
-      const have = new Set(this.settings.pinTypes.map((t) => t.id));
+      const have = new Set(this.tfSettings.pinTypes.map((t) => t.id));
       for (const def of DEFAULT_PIN_TYPES) {
         if (!have.has(def.id))
-          this.settings.pinTypes.push({ ...def });
+          this.tfSettings.pinTypes.push({ ...def });
       }
-      const tower = this.settings.pinTypes.find((t) => t.id === "tower");
+      const tower = this.tfSettings.pinTypes.find((t) => t.id === "tower");
       if (tower && (tower.icon === "tower" || tower.icon === "tower-observation")) {
         tower.icon = "pinRed";
       }
@@ -11104,7 +10995,7 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
     }
   }
   async seedPlaceTemplates() {
-    const folder = this.settings.templateFolder || "Templates/TownForge";
+    const folder = this.tfSettings.templateFolder || "Templates/TownForge";
     const excluded = this.ensureTemplaterIgnores(folder);
     const vault = this.app.vault;
     if (!vault.getAbstractFileByPath(folder)) {
@@ -11128,7 +11019,7 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
     return { created, updated, excluded };
   }
   async saveSettings() {
-    await this.saveData(this.settings);
+    await this.saveData(this.tfSettings);
   }
   async onunload() {
   }
@@ -11192,8 +11083,7 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
     const { config, errors } = parseConfig(applied.source);
     for (const m of applied.errors)
       errors.push(m);
-    const wrap = el.createDiv({ cls: "town-forge-map" });
-    wrap.style.margin = "0.5em 0";
+    const wrap = el.createDiv({ cls: "town-forge-map tf-s-map-wrap" });
     try {
       const opts = {
         roughness: config.roughness,
@@ -11207,21 +11097,17 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
       };
       const fullMode = config.mode === "full";
       const genSize = fullMode ? (_b = MAP_SIZE_BY_SIZE[config.settlement]) != null ? _b : 1e3 : config.size;
-      const canvas = wrap.createEl("canvas");
+      const canvas = wrap.createEl("canvas", { cls: "tf-s-map-canvas" });
       canvas.width = genSize;
       canvas.height = genSize;
-      canvas.style.maxWidth = "100%";
-      canvas.style.height = "auto";
-      canvas.style.borderRadius = "6px";
-      canvas.style.display = "block";
       const ctx2 = canvas.getContext("2d");
       if (!ctx2) {
         wrap.createDiv({ text: "Town Forge: could not get a 2D canvas context." });
         return;
       }
       const baseDist = fullMode ? (_c = SIZE_BASE_DISTANCE[config.settlement]) != null ? _c : LANDSCAPE_BASE_DISTANCE : LANDSCAPE_BASE_DISTANCE;
-      const mapDistance = (_d = config.scale) != null ? _d : baseDist * this.settings.scaleMultiplier;
-      const distanceUnit = (_e = config.unit) != null ? _e : this.settings.distanceUnit;
+      const mapDistance = (_d = config.scale) != null ? _d : baseDist * this.tfSettings.scaleMultiplier;
+      const distanceUnit = (_e = config.unit) != null ? _e : this.tfSettings.distanceUnit;
       let captionText;
       if (fullMode) {
         const full = generateFull(config.terrain, config.seed, {
@@ -11244,20 +11130,14 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
         renderScene(ctx2, scene, genSize, genSize, config.terrain, mapDistance, distanceUnit);
         captionText = `${config.name ? config.name + " \xB7 " : ""}${config.terrain} \xB7 seed "${config.seed}"`;
       }
-      const caption = wrap.createDiv({ cls: "town-forge-caption" });
-      caption.style.fontSize = "0.75em";
-      caption.style.opacity = "0.6";
-      caption.style.marginTop = "2px";
+      const caption = wrap.createDiv({ cls: "town-forge-caption tf-s-map-caption" });
       caption.setText(captionText);
     } catch (e) {
-      const err = wrap.createDiv({ cls: "town-forge-error" });
-      err.style.color = "var(--text-error)";
+      const err = wrap.createDiv({ cls: "town-forge-error tf-s-map-error" });
       err.setText(`Town Forge error: ${e instanceof Error ? e.message : String(e)}`);
     }
     if (errors.length) {
-      const warn = wrap.createDiv({ cls: "town-forge-warn" });
-      warn.style.color = "var(--text-warning)";
-      warn.style.fontSize = "0.75em";
+      const warn = wrap.createDiv({ cls: "town-forge-warn tf-s-map-warn" });
       warn.setText("Config notes: " + errors.join("; "));
     }
   }
@@ -11272,24 +11152,24 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h3", { text: "Town Forge \u2014 map scale" });
     new import_obsidian2.Setting(containerEl).setName("Distance unit").setDesc('Free text shown on the scale bar \u2014 e.g. "miles", "km", or "lengths of string".').addText(
-      (text) => text.setPlaceholder("miles").setValue(this.plugin.settings.distanceUnit).onChange(async (value) => {
-        this.plugin.settings.distanceUnit = value.trim() || "miles";
+      (text) => text.setPlaceholder("miles").setValue(this.plugin.tfSettings.distanceUnit).onChange(async (value) => {
+        this.plugin.tfSettings.distanceUnit = value.trim() || "miles";
         await this.plugin.saveSettings();
       })
     );
     new import_obsidian2.Setting(containerEl).setName("Scale multiplier").setDesc("Scales all map distances up or down together. 1.0 = defaults (a metropolis map \u2248 35 of your units across, a hamlet \u2248 1.5). Use 2 for a larger world, 0.5 for a smaller one. A single map block can override the distance entirely with a `scale:` line.").addText(
-      (text) => text.setPlaceholder("1.0").setValue(String(this.plugin.settings.scaleMultiplier)).onChange(async (value) => {
+      (text) => text.setPlaceholder("1.0").setValue(String(this.plugin.tfSettings.scaleMultiplier)).onChange(async (value) => {
         const n = parseFloat(value);
         if (!isNaN(n) && n > 0) {
-          this.plugin.settings.scaleMultiplier = n;
+          this.plugin.tfSettings.scaleMultiplier = n;
           await this.plugin.saveSettings();
         }
       })
     );
     containerEl.createEl("h3", { text: "Town Forge \u2014 export" });
     new import_obsidian2.Setting(containerEl).setName("Enable TTRPG Tools: Maps export").setDesc('Turn on the "Export to TTRPG Tools: Maps" button and its options (pin types, templates, per-type note folders). Requires the community plugin "TTRPG Tools: Maps" (formerly Zoom Map). Off by default.').addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.enableZoomMapExport).onChange(async (value) => {
-        this.plugin.settings.enableZoomMapExport = value;
+      (toggle) => toggle.setValue(this.plugin.tfSettings.enableZoomMapExport).onChange(async (value) => {
+        this.plugin.tfSettings.enableZoomMapExport = value;
         await this.plugin.saveSettings();
         this.plugin.refreshOpenPanels();
         this.display();
@@ -11301,16 +11181,16 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
         window.open("obsidian://show-plugin?id=zoom-map");
       })
     );
-    if (this.plugin.settings.enableZoomMapExport) {
+    if (this.plugin.tfSettings.enableZoomMapExport) {
       new import_obsidian2.Setting(containerEl).setName("Export folder").setDesc('Vault folder that "Export to TTRPG Tools: Maps" writes into. Each export creates a subfolder named after the map, holding the PNG and a note with a zoommap code block. Use a vault-relative path like "Maps" or "Atlas/Cities".').addText(
-        (text) => text.setPlaceholder("Maps").setValue(this.plugin.settings.exportFolder).onChange(async (value) => {
-          this.plugin.settings.exportFolder = value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "Maps";
+        (text) => text.setPlaceholder("Maps").setValue(this.plugin.tfSettings.exportFolder).onChange(async (value) => {
+          this.plugin.tfSettings.exportFolder = value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "Maps";
           await this.plugin.saveSettings();
         })
       );
       new import_obsidian2.Setting(containerEl).setName("Template folder").setDesc(`Vault folder holding per-building-type template notes (e.g. "Shop.md"). When a place is pinned, the matching template is copied into the map folder as that place's note, with {{name}}, {{type}}, {{subtype}} and {{town}} filled in. Leave Randomness/Templater syntax in the template \u2014 it resolves when you open the note. If no template exists for a type, a simple default note is written.`).addText(
-        (text) => text.setPlaceholder("Templates/TownForge").setValue(this.plugin.settings.templateFolder).onChange(async (value) => {
-          this.plugin.settings.templateFolder = value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "Templates/TownForge";
+        (text) => text.setPlaceholder("Templates/TownForge").setValue(this.plugin.tfSettings.templateFolder).onChange(async (value) => {
+          this.plugin.tfSettings.templateFolder = value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "Templates/TownForge";
           await this.plugin.saveSettings();
         })
       );
@@ -11338,15 +11218,14 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
           b.setButtonText("Create / update").setCta().onClick(async () => {
             try {
               const r = await this.plugin.seedPlaceTemplates();
-              new import_obsidian2.Notice(`Town Forge: templates ready in "${this.plugin.settings.templateFolder}" (${r.created} created, ${r.updated} updated).` + (r.excluded ? " Added it to Templater's excluded folders so Templater won't auto-run the templates." : ""), r.excluded ? 9e3 : 4e3);
+              new import_obsidian2.Notice(`Town Forge: templates ready in "${this.plugin.tfSettings.templateFolder}" (${r.created} created, ${r.updated} updated).` + (r.excluded ? " Added it to Templater's excluded folders so Templater won't auto-run the templates." : ""), r.excluded ? 9e3 : 4e3);
             } catch (e) {
               new import_obsidian2.Notice("Town Forge: template creation failed - " + (e && e.message ? e.message : String(e)), 8e3);
             }
           });
         }
       );
-      const _tfSteps = containerEl.createDiv({ cls: "setting-item-description" });
-      _tfSteps.style.margin = "-0.4em 0 1em 0";
+      const _tfSteps = containerEl.createDiv({ cls: "setting-item-description tf-s-steps" });
       _tfSteps.setText("Checking set-up\u2026");
       (async () => {
         const app2 = this.app || this.plugin.app;
@@ -11382,13 +11261,10 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
           tpTrigger = void 0;
         }
         _tfSteps.empty();
-        const head = _tfSteps.createEl("div", { text: "Set-up checklist - do these in order:" });
-        head.style.fontWeight = "600";
-        head.style.margin = "0 0 0.35em 0";
+        const head = _tfSteps.createDiv({ text: "Set-up checklist - do these in order:", cls: "tf-s-steps-head" });
         const row = (state, text) => {
           const mark = state === true ? "\u2705" : state === "warn" ? "\u26A0\uFE0F" : "\u274C";
-          const d = _tfSteps.createEl("div", { text: `${mark} ${text}` });
-          d.style.margin = "0.15em 0";
+          const d = _tfSteps.createDiv({ text: `${mark} ${text}`, cls: "tf-s-steps-row" });
           return d;
         };
         row(!!api, api ? "Step 1 - Randomness plugin installed & on" : "Step 1 - install & enable the Randomness plugin (dice button on the right)");
@@ -11416,8 +11292,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
           _tfCreateBtn.setDisabled(!ready);
           _tfCreateBtn.setButtonText(ready ? "Create / update" : "Create / update - finish the checklist");
         }
-        const foot = _tfSteps.createEl("div", { text: ready ? "\u2705 All set - click Create / update, then generate a map and the places fill themselves in." : "\u26A0\uFE0F Finish the red steps first. The button switches on once the Fantasy Hub generators are found." });
-        foot.style.marginTop = "0.4em";
+        const foot = _tfSteps.createDiv({ text: ready ? "\u2705 All set - click Create / update, then generate a map and the places fill themselves in." : "\u26A0\uFE0F Finish the red steps first. The button switches on once the Fantasy Hub generators are found.", cls: "tf-s-steps-foot" });
       })();
       (() => {
         var _app = this.app || this.plugin.app;
@@ -11456,14 +11331,14 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
       })();
       new import_obsidian2.Setting(containerEl).setName("Export options").setHeading();
       new import_obsidian2.Setting(containerEl).setName("Open note after export").setDesc("After exporting, open the generated map note in the active pane.").addToggle(
-        (toggle) => toggle.setValue(this.plugin.settings.openAfterExport).onChange(async (value) => {
-          this.plugin.settings.openAfterExport = value;
+        (toggle) => toggle.setValue(this.plugin.tfSettings.openAfterExport).onChange(async (value) => {
+          this.plugin.tfSettings.openAfterExport = value;
           await this.plugin.saveSettings();
         })
       );
       new import_obsidian2.Setting(containerEl).setName("Group place notes by type").setDesc("Write each place note into a per-type subfolder inside the map folder (e.g. Steadwick/Shop/, Steadwick/Inn/) instead of all in one flat folder. The map note and image stay at the map-folder root, and pin links keep working.").addToggle(
-        (toggle) => toggle.setValue(this.plugin.settings.groupNotesByType).onChange(async (value) => {
-          this.plugin.settings.groupNotesByType = value;
+        (toggle) => toggle.setValue(this.plugin.tfSettings.groupNotesByType).onChange(async (value) => {
+          this.plugin.tfSettings.groupNotesByType = value;
           await this.plugin.saveSettings();
         })
       );
@@ -11471,8 +11346,8 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     }
     containerEl.createEl("h3", { text: "Town Forge \u2014 panel" });
     new import_obsidian2.Setting(containerEl).setName("Show troubleshooting button").setDesc('Show the "\u{1F41E} Copy config for support" button in the Town Forge panel. Handy for bug reports. Off by default.').addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.showTroubleshoot).onChange(async (value) => {
-        this.plugin.settings.showTroubleshoot = value;
+      (toggle) => toggle.setValue(this.plugin.tfSettings.showTroubleshoot).onChange(async (value) => {
+        this.plugin.tfSettings.showTroubleshoot = value;
         await this.plugin.saveSettings();
         this.plugin.refreshOpenPanels();
       })
@@ -11488,15 +11363,15 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     const rowsHost = containerEl.createDiv();
     const redraw = () => {
       rowsHost.empty();
-      this.plugin.settings.pinTypes.forEach((t, i) => this.renderPinTypeRow(rowsHost, t, i, redraw));
+      this.plugin.tfSettings.pinTypes.forEach((t, i) => this.renderPinTypeRow(rowsHost, t, i, redraw));
     };
     redraw();
     new import_obsidian2.Setting(containerEl).addButton((b) => b.setButtonText("Add pin type").onClick(async () => {
-      this.plugin.settings.pinTypes.push(newCustomPinType());
+      this.plugin.tfSettings.pinTypes.push(newCustomPinType());
       await this.plugin.saveSettings();
       redraw();
     })).addButton((b) => b.setButtonText("Reset to defaults").setWarning().onClick(async () => {
-      this.plugin.settings.pinTypes = DEFAULT_PIN_TYPES.map((t) => ({ ...t }));
+      this.plugin.tfSettings.pinTypes = DEFAULT_PIN_TYPES.map((t) => ({ ...t }));
       await this.plugin.saveSettings();
       redraw();
       this.display();
@@ -11505,24 +11380,23 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     const details = containerEl.createEl("details");
     details.createEl("summary", { text: "Advanced: edit pin types as JSON" });
     details.createEl("p", { text: "Power users: edit the full config here (and write custom JS name hooks). In a hook, these are in scope: app, api (Randomness if installed), seed, town, type, index \u2014 return a string. Example: return (await api.rollUnscoped('ShopName')).result", cls: "setting-item-description" });
-    const ta = details.createEl("textarea");
-    ta.style.width = "100%";
-    ta.style.minHeight = "220px";
-    ta.style.fontFamily = "monospace";
-    ta.value = pinTypesToJson(this.plugin.settings.pinTypes);
-    const status = details.createEl("div", { cls: "setting-item-description" });
+    const ta = details.createEl("textarea", { cls: "tf-s-json-editor" });
+    ta.value = pinTypesToJson(this.plugin.tfSettings.pinTypes);
+    const status = details.createDiv({ cls: "setting-item-description" });
     const applyBtn = details.createEl("button", { text: "Apply JSON" });
     applyBtn.onclick = async () => {
       const { types, error } = parsePinTypesJson(ta.value);
       if (error || !types) {
         status.setText(`\u26A0 ${error != null ? error : "Parse failed"}`);
-        status.style.color = "var(--text-error)";
+        status.toggleClass("tf-s-status-success", false);
+        status.toggleClass("tf-s-status-error", true);
         return;
       }
-      this.plugin.settings.pinTypes = types;
+      this.plugin.tfSettings.pinTypes = types;
       await this.plugin.saveSettings();
       status.setText(`\u2713 Applied ${types.length} pin types`);
-      status.style.color = "var(--text-success)";
+      status.toggleClass("tf-s-status-error", false);
+      status.toggleClass("tf-s-status-success", true);
       redraw();
     };
   }
@@ -11530,59 +11404,37 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
   // the anchoring pin type requests.
   renderBuildingKey(containerEl) {
     var _a;
-    const details = containerEl.createEl("details");
-    details.style.margin = "8px 0 14px";
-    const summary = details.createEl("summary", { text: "Building key \u2014 what each map building is" });
-    summary.style.cursor = "pointer";
-    summary.style.fontWeight = "600";
+    const details = containerEl.createEl("details", { cls: "tf-s-key-details" });
+    const summary = details.createEl("summary", { text: "Building key \u2014 what each map building is", cls: "tf-s-key-summary" });
     details.createEl("p", {
       text: "These are the buildings Town Forge draws on the map. Each row shows the building, what anchors to it, and the template note its pin type requests (named after the note type). Sampled types (shops, etc.) have no unique building \u2014 they sit on ordinary houses.",
       cls: "setting-item-description"
     });
     const byAnchor = /* @__PURE__ */ new Map();
-    for (const t of this.plugin.settings.pinTypes) {
+    for (const t of this.plugin.tfSettings.pinTypes) {
       if (!t.enabled)
         continue;
       if ((t.placement === "anchored" || t.placement === "both") && t.anchor && !byAnchor.has(t.anchor)) {
         byAnchor.set(t.anchor, t);
       }
     }
-    const grid = details.createDiv();
-    grid.style.display = "flex";
-    grid.style.flexWrap = "wrap";
-    grid.style.gap = "10px";
+    const grid = details.createDiv({ cls: "tf-s-key-grid" });
     for (const entry of BUILDING_KEY) {
-      const card = grid.createDiv();
-      card.style.width = "150px";
-      card.style.border = "1px solid var(--background-modifier-border)";
-      card.style.borderRadius = "8px";
-      card.style.padding = "8px";
-      card.style.background = "var(--background-secondary)";
-      card.style.display = "flex";
-      card.style.flexDirection = "column";
-      card.style.gap = "4px";
-      const img = card.createEl("img");
+      const card = grid.createDiv({ cls: "tf-s-key-card" });
+      const img = card.createEl("img", { cls: "tf-s-key-img" });
       img.src = (_a = BUILDING_IMAGES[entry.key]) != null ? _a : "";
-      img.style.width = "100%";
-      img.style.borderRadius = "4px";
-      img.style.imageRendering = "auto";
-      const title = card.createEl("strong", { text: entry.label });
-      title.style.fontSize = "0.85em";
-      const desc = card.createEl("span", { text: entry.note });
-      desc.style.fontSize = "0.72em";
-      desc.style.opacity = "0.75";
+      const title = card.createEl("strong", { text: entry.label, cls: "tf-s-key-title" });
+      const desc = card.createSpan({ text: entry.note, cls: "tf-s-key-desc" });
       const pin = entry.anchor ? byAnchor.get(entry.anchor) : null;
-      const mapping = card.createEl("span");
-      mapping.style.fontSize = "0.72em";
-      mapping.style.marginTop = "2px";
+      const mapping = card.createSpan({ cls: "tf-s-key-mapping" });
       if (entry.anchor && pin) {
         mapping.setText(`\u2192 ${pin.noteType} \xB7 template: ${pin.noteType}.md`);
       } else if (entry.anchor && !pin) {
         mapping.setText("\u2192 no enabled pin type");
-        mapping.style.opacity = "0.6";
+        mapping.addClass("tf-s-key-mapping-dim");
       } else {
         mapping.setText("\u2192 used by sampled types (shops, inns\u2026)");
-        mapping.style.opacity = "0.6";
+        mapping.addClass("tf-s-key-mapping-dim");
       }
     }
   }
@@ -11591,17 +11443,8 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     const save = async () => {
       await this.plugin.saveSettings();
     };
-    const card = host.createDiv();
-    card.style.border = "1px solid var(--background-modifier-border)";
-    card.style.borderRadius = "8px";
-    card.style.padding = "10px 12px";
-    card.style.marginBottom = "8px";
-    card.style.background = "var(--background-secondary)";
-    const header = card.createDiv();
-    header.style.display = "flex";
-    header.style.alignItems = "center";
-    header.style.gap = "8px";
-    header.style.marginBottom = "8px";
+    const card = host.createDiv({ cls: "tf-s-pin-card" });
+    const header = card.createDiv({ cls: "tf-s-pin-header" });
     const enable = header.createEl("input", { type: "checkbox" });
     enable.checked = t.enabled;
     enable.title = "Enabled";
@@ -11609,77 +11452,54 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
       t.enabled = enable.checked;
       await save();
     };
-    const heading = header.createEl("strong", { text: t.noteType || "(unnamed)" });
-    heading.style.flex = "1";
-    heading.style.fontSize = "1em";
-    const badge = header.createEl("span", { text: t.placement });
-    badge.style.fontSize = "0.75em";
-    badge.style.opacity = "0.7";
-    badge.style.padding = "1px 6px";
-    badge.style.border = "1px solid var(--background-modifier-border)";
-    badge.style.borderRadius = "10px";
-    const del = header.createEl("button", { text: "Remove" });
-    del.style.fontSize = "0.8em";
+    const heading = header.createEl("strong", { text: t.noteType || "(unnamed)", cls: "tf-s-pin-heading" });
+    const badge = header.createSpan({ text: t.placement, cls: "tf-s-pin-badge" });
+    const del = header.createEl("button", { text: "Remove", cls: "tf-s-pin-remove" });
     del.onclick = async () => {
-      this.plugin.settings.pinTypes.splice(index, 1);
+      this.plugin.tfSettings.pinTypes.splice(index, 1);
       await save();
       redraw();
     };
-    const grid = card.createDiv();
-    grid.style.display = "flex";
-    grid.style.flexWrap = "wrap";
-    grid.style.gap = "10px 14px";
-    grid.style.alignItems = "flex-end";
+    const grid = card.createDiv({ cls: "tf-s-pin-grid" });
     const field = (label, widthEm) => {
-      const wrap = grid.createDiv();
-      wrap.style.display = "flex";
-      wrap.style.flexDirection = "column";
-      wrap.style.gap = "2px";
-      wrap.style.minWidth = `${widthEm}em`;
-      const lab = wrap.createEl("label", { text: label });
-      lab.style.fontSize = "0.72em";
-      lab.style.opacity = "0.7";
+      const wrap = grid.createDiv({ cls: "tf-s-pin-field" });
+      wrap.setCssStyles({ minWidth: `${widthEm}em` });
+      const lab = wrap.createEl("label", { text: label, cls: "tf-s-pin-field-label" });
       return wrap;
     };
     const noteTypeWrap = field("Note type", 9);
-    const noteTypeInput = noteTypeWrap.createEl("input", { type: "text", value: t.noteType });
-    noteTypeInput.style.width = "100%";
+    const noteTypeInput = noteTypeWrap.createEl("input", { type: "text", value: t.noteType, cls: "tf-s-full-width" });
     noteTypeInput.onchange = async () => {
       t.noteType = noteTypeInput.value.trim() || t.noteType;
       heading.setText(t.noteType);
       await save();
     };
     const iconWrap = field("Pin icon (Zoom Map key)", 11);
-    const iconInput = iconWrap.createEl("input", { type: "text", value: t.icon });
-    iconInput.style.width = "100%";
+    const iconInput = iconWrap.createEl("input", { type: "text", value: t.icon, cls: "tf-s-full-width" });
     iconInput.onchange = async () => {
       t.icon = iconInput.value.trim() || t.icon;
       await save();
     };
     const layerWrap = field("Layer", 9);
-    const layerInput = layerWrap.createEl("input", { type: "text", value: t.layerName });
-    layerInput.style.width = "100%";
+    const layerInput = layerWrap.createEl("input", { type: "text", value: t.layerName, cls: "tf-s-full-width" });
     layerInput.onchange = async () => {
       t.layerName = layerInput.value.trim() || t.layerName;
       await save();
     };
     const minWrap = field("Min", 4);
-    const minInput = minWrap.createEl("input", { type: "number", value: String(t.countMin) });
-    minInput.style.width = "100%";
+    const minInput = minWrap.createEl("input", { type: "number", value: String(t.countMin), cls: "tf-s-full-width" });
     minInput.onchange = async () => {
       t.countMin = Math.max(0, parseInt(minInput.value) || 0);
       await save();
     };
     const maxWrap = field("Max", 4);
-    const maxInput = maxWrap.createEl("input", { type: "number", value: String(t.countMax) });
-    maxInput.style.width = "100%";
+    const maxInput = maxWrap.createEl("input", { type: "number", value: String(t.countMax), cls: "tf-s-full-width" });
     maxInput.onchange = async () => {
       t.countMax = Math.max(t.countMin, parseInt(maxInput.value) || t.countMin);
       await save();
     };
     const modeWrap = field("Count mode", 7);
-    const modeSel = modeWrap.createEl("select");
-    modeSel.style.width = "100%";
+    const modeSel = modeWrap.createEl("select", { cls: "tf-s-full-width" });
     for (const m of ["scaled", "fixed"]) {
       const o = modeSel.createEl("option", { text: m, value: m });
       if (t.countMode === m)
@@ -11690,8 +11510,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
       await save();
     };
     const placeWrap = field("Placement", 8);
-    const placeSel = placeWrap.createEl("select");
-    placeSel.style.width = "100%";
+    const placeSel = placeWrap.createEl("select", { cls: "tf-s-full-width" });
     for (const p of ["sampled", "anchored", "both"]) {
       const o = placeSel.createEl("option", { text: p, value: p });
       if (t.placement === p)
@@ -11705,8 +11524,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     };
     if (t.placement === "anchored" || t.placement === "both") {
       const anchorWrap = field("Anchor (real structure)", 10);
-      const anchorSel = anchorWrap.createEl("select");
-      anchorSel.style.width = "100%";
+      const anchorSel = anchorWrap.createEl("select", { cls: "tf-s-full-width" });
       const anchors = ["castle", "cathedral", "market", "barracks", "dock", "mill", "stable", "inn", "tower", "generic", "farm"];
       for (const a of anchors) {
         const o = anchorSel.createEl("option", { text: a, value: a });
@@ -11721,8 +11539,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
       };
     }
     const nameWrap = field("Naming", 8);
-    const nameSel = nameWrap.createEl("select");
-    nameSel.style.width = "100%";
+    const nameSel = nameWrap.createEl("select", { cls: "tf-s-full-width" });
     for (const nm of [["builtin", "built-in"], ["js", "custom JS"]]) {
       const o = nameSel.createEl("option", { text: nm[1], value: nm[0] });
       if (t.nameMode === nm[0])
@@ -11734,38 +11551,22 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
       redraw();
     };
     if (t.nameMode === "js") {
-      const jsWrap = card.createDiv();
-      jsWrap.style.marginTop = "8px";
-      const lab = jsWrap.createEl("label", { text: "Name JS \u2014 in scope: app, api, seed, town, type, index, subtypes \u2014 return a string, or { name, subtype } to set both" });
-      lab.style.fontSize = "0.72em";
-      lab.style.opacity = "0.7";
-      lab.style.display = "block";
-      lab.style.marginBottom = "2px";
-      const ta = jsWrap.createEl("textarea");
+      const jsWrap = card.createDiv({ cls: "tf-s-pin-subsection" });
+      const lab = jsWrap.createEl("label", { text: "Name JS \u2014 in scope: app, api, seed, town, type, index, subtypes \u2014 return a string, or { name, subtype } to set both", cls: "tf-s-pin-block-label" });
+      const ta = jsWrap.createEl("textarea", { cls: "tf-s-pin-js-editor" });
       ta.value = (_a = t.nameJs) != null ? _a : "";
       ta.placeholder = `const [subtype, name] = (await api.rollUnscoped("TF-ShopPick")).result.split("|");
 return { name, subtype };`;
-      ta.style.width = "100%";
-      ta.style.minHeight = "54px";
-      ta.style.fontFamily = "monospace";
-      ta.style.fontSize = "0.8em";
       ta.onchange = async () => {
         t.nameJs = ta.value;
         await save();
       };
     }
-    const subWrap = card.createDiv();
-    subWrap.style.marginTop = "8px";
-    const subLab = subWrap.createEl("label", { text: "Subtypes (comma-separated) \u2014 written to frontmatter as subtype:. The JS hook returning { name, subtype } keeps name+subtype correlated; the built-in picks from this list but does not guarantee a match." });
-    subLab.style.fontSize = "0.72em";
-    subLab.style.opacity = "0.7";
-    subLab.style.display = "block";
-    subLab.style.marginBottom = "2px";
-    const subIn = subWrap.createEl("input", { type: "text" });
+    const subWrap = card.createDiv({ cls: "tf-s-pin-subsection" });
+    const subLab = subWrap.createEl("label", { text: "Subtypes (comma-separated) \u2014 written to frontmatter as subtype:. The JS hook returning { name, subtype } keeps name+subtype correlated; the built-in picks from this list but does not guarantee a match.", cls: "tf-s-pin-block-label" });
+    const subIn = subWrap.createEl("input", { type: "text", cls: "tf-s-pin-sub-input" });
     subIn.value = ((_b = t.subtypes) != null ? _b : []).join(", ");
     subIn.placeholder = "e.g. general, weapon, armor, alchemy, magic";
-    subIn.style.width = "100%";
-    subIn.style.fontSize = "0.8em";
     subIn.onchange = async () => {
       const arr = subIn.value.split(",").map((s) => s.trim()).filter((s) => s.length);
       t.subtypes = arr.length ? arr : void 0;

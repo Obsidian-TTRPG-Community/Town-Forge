@@ -100,42 +100,20 @@ export var TownForgePreviewView = class extends ItemView {
   async onOpen() {
     const root = this.contentEl;
     root.empty();
-    root.addClass("town-forge-panel");
-    root.style.padding = "10px";
-    root.style.display = "flex";
-    root.style.flexDirection = "column";
-    root.style.gap = "8px";
-    root.style.overflowY = "auto";
-    const title = root.createEl("h4", { text: "Town Forge" });
-    title.style.margin = "0 0 2px 0";
-    const controls = root.createDiv();
-    controls.style.display = "flex";
-    controls.style.flexDirection = "column";
-    controls.style.gap = "5px";
+    root.addClass("town-forge-panel", "tf-p-root");
+    root.createEl("h4", { text: "Town Forge", cls: "tf-p-title" });
+    const controls = root.createDiv({ cls: "tf-p-controls" });
     const row = (labelText) => {
-      const r = controls.createDiv();
-      r.style.display = "flex";
-      r.style.alignItems = "center";
-      r.style.justifyContent = "space-between";
-      r.style.gap = "8px";
-      const lab = r.createEl("label", { text: labelText });
-      lab.style.fontSize = "0.78em";
-      lab.style.opacity = "0.85";
-      lab.style.minWidth = "82px";
+      const r = controls.createDiv({ cls: "tf-p-row" });
+      r.createEl("label", { text: labelText, cls: "tf-p-row-label" });
       return r;
     };
     const sectionLabel = (t) => {
-      const s = controls.createEl("div", { text: t });
-      s.style.fontSize = "0.68em";
-      s.style.textTransform = "uppercase";
-      s.style.letterSpacing = "0.06em";
-      s.style.opacity = "0.5";
-      s.style.marginTop = "2px";
+      const s = controls.createDiv({ text: t, cls: "tf-p-section-label" });
       return s;
     };
     const dropdown = (parent, opts, cur, onChange) => {
-      const sel = parent.createEl("select");
-      sel.style.flex = "1";
+      const sel = parent.createEl("select", { cls: "tf-p-select" });
       for (const o of opts) {
         const opt = sel.createEl("option", { text: o, value: o });
         if (o === cur)
@@ -146,10 +124,8 @@ export var TownForgePreviewView = class extends ItemView {
     };
     sectionLabel("Identity");
     const nameRow = row("Name");
-    const nameInput = nameRow.createEl("input", { type: "text", value: this.state.name, placeholder: "(random)" });
+    const nameInput = nameRow.createEl("input", { type: "text", value: this.state.name, placeholder: "(random)", cls: "tf-p-text-input" });
     this.nameInputEl = nameInput;
-    nameInput.style.flex = "1";
-    nameInput.style.minWidth = "0";
     nameInput.onchange = () => {
       this.state.name = nameInput.value;
       this.markStaleOrRefresh(false);
@@ -161,10 +137,8 @@ export var TownForgePreviewView = class extends ItemView {
       this.markStaleOrRefresh(false);
     };
     const seedRow = row("Seed");
-    const seedInput = seedRow.createEl("input", { type: "text", value: this.state.seed });
+    const seedInput = seedRow.createEl("input", { type: "text", value: this.state.seed, cls: "tf-p-text-input" });
     this.seedInputEl = seedInput;
-    seedInput.style.flex = "1";
-    seedInput.style.minWidth = "0";
     seedInput.onchange = () => {
       this.state.seed = seedInput.value || "townforge";
       this.markStaleOrRefresh(true);
@@ -199,21 +173,13 @@ export var TownForgePreviewView = class extends ItemView {
     });
     sectionLabel("Approach roads");
     const roadsRow = row("Edges");
-    const autoLab = roadsRow.createEl("label");
-    autoLab.style.display = "flex";
-    autoLab.style.alignItems = "center";
-    autoLab.style.gap = "3px";
-    autoLab.style.fontSize = "0.75em";
+    const autoLab = roadsRow.createEl("label", { cls: "tf-p-auto-label" });
     const autoCb = autoLab.createEl("input", { type: "checkbox" });
     autoCb.checked = this.state.edgesAuto;
     autoLab.createSpan({ text: "auto" });
     const edgeBoxes = {};
     for (const e of ["N", "E", "S", "W"]) {
-      const l = roadsRow.createEl("label");
-      l.style.display = "flex";
-      l.style.alignItems = "center";
-      l.style.gap = "2px";
-      l.style.fontSize = "0.75em";
+      const l = roadsRow.createEl("label", { cls: "tf-p-edge-label" });
       const cb = l.createEl("input", { type: "checkbox" });
       cb.checked = this.state.edges[e];
       cb.disabled = this.state.edgesAuto;
@@ -233,17 +199,12 @@ export var TownForgePreviewView = class extends ItemView {
     sectionLabel("Density");
     const slider = (labelText, min, max, step, val, fmt, onChange) => {
       const r = row(labelText);
-      const s = r.createEl("input", { type: "range" });
+      const s = r.createEl("input", { type: "range", cls: "tf-p-slider" });
       s.min = String(min);
       s.max = String(max);
       s.step = String(step);
       s.value = String(val);
-      s.style.flex = "1";
-      const out = r.createEl("span", { text: fmt(val) });
-      out.style.fontSize = "0.72em";
-      out.style.minWidth = "30px";
-      out.style.textAlign = "right";
-      out.style.opacity = "0.7";
+      const out = r.createSpan({ text: fmt(val), cls: "tf-p-slider-out" });
       s.oninput = () => {
         out.setText(fmt(parseFloat(s.value)));
       };
@@ -266,11 +227,7 @@ export var TownForgePreviewView = class extends ItemView {
     this.mtnSideRowEl = mtnRow;
     const mtnEdgeBoxes = {};
     for (const e of ["N", "E", "S", "W"]) {
-      const l = mtnRow.createEl("label");
-      l.style.display = "flex";
-      l.style.alignItems = "center";
-      l.style.gap = "2px";
-      l.style.fontSize = "0.75em";
+      const l = mtnRow.createEl("label", { cls: "tf-p-edge-label" });
       const cb = l.createEl("input", { type: "checkbox" });
       cb.checked = this.state.mountainEdges[e];
       cb.onchange = () => {
@@ -280,27 +237,19 @@ export var TownForgePreviewView = class extends ItemView {
       l.createSpan({ text: e });
       mtnEdgeBoxes[e] = cb;
     }
-    const mtnNote = mtnRow.createEl("span", { text: "overlay" });
-    mtnNote.style.fontSize = "0.6em";
-    mtnNote.style.opacity = "0.4";
+    mtnRow.createSpan({ text: "overlay", cls: "tf-p-mtn-note" });
     this.landmarksSection = sectionLabel("Landmarks");
-    const triRow = controls.createDiv();
+    const triRow = controls.createDiv({ cls: "tf-p-tri-row" });
     this.landmarksRowEl = triRow;
-    triRow.style.display = "flex";
-    triRow.style.flexWrap = "wrap";
-    triRow.style.gap = "5px";
     const triBtn = (labelText, key) => {
-      const b = triRow.createEl("button");
+      const b = triRow.createEl("button", { cls: "tf-p-tri-btn" });
       const paint = () => {
         const st = this.state[key];
         b.setText(`${labelText}: ${TRI_LABEL[st]}`);
-        b.style.opacity = st === "auto" ? "0.6" : "1";
-        b.style.fontWeight = st === "on" ? "600" : "400";
-        b.style.textDecoration = st === "off" ? "line-through" : "none";
+        b.toggleClass("tf-p-tri-auto", st === "auto");
+        b.toggleClass("tf-p-tri-on", st === "on");
+        b.toggleClass("tf-p-tri-off", st === "off");
       };
-      b.style.fontSize = "0.72em";
-      b.style.flex = "1";
-      b.style.minWidth = "70px";
       b.onclick = () => {
         this.state[key] = TRI_NEXT[this.state[key]];
         paint();
@@ -314,42 +263,15 @@ export var TownForgePreviewView = class extends ItemView {
     triBtn("Market", "market");
     triBtn("Barracks", "barracks");
     triBtn("Tower", "tower");
-    const canvasWrap = root.createDiv();
-    canvasWrap.style.marginTop = "4px";
-    const viewport = canvasWrap.createDiv();
+    const canvasWrap = root.createDiv({ cls: "tf-p-canvas-wrap" });
+    const viewport = canvasWrap.createDiv({ cls: "tf-p-viewport" });
     this.viewport = viewport;
-    viewport.style.position = "relative";
-    viewport.style.width = "100%";
-    viewport.style.overflow = "hidden";
-    viewport.style.borderRadius = "6px";
-    viewport.style.cursor = "grab";
-    viewport.style.touchAction = "none";
-    this.canvas = viewport.createEl("canvas");
-    this.canvas.style.width = "100%";
-    this.canvas.style.height = "auto";
-    this.canvas.style.display = "block";
-    this.canvas.style.transformOrigin = "0 0";
-    this.canvas.style.willChange = "transform";
-    const zoomBar = viewport.createDiv();
-    zoomBar.style.position = "absolute";
-    zoomBar.style.top = "6px";
-    zoomBar.style.right = "6px";
-    zoomBar.style.display = "flex";
-    zoomBar.style.flexDirection = "column";
-    zoomBar.style.gap = "3px";
-    zoomBar.style.zIndex = "2";
+    this.canvas = viewport.createEl("canvas", { cls: "tf-p-canvas" });
+    const zoomBar = viewport.createDiv({ cls: "tf-p-zoom-bar" });
     zoomBar.addEventListener("pointerdown", (e) => e.stopPropagation());
     const mkZoomBtn = (label, aria, fn) => {
-      const b = zoomBar.createEl("button", { text: label });
+      const b = zoomBar.createEl("button", { text: label, cls: "tf-p-zoom-btn" });
       b.setAttr("aria-label", aria);
-      b.style.width = "26px";
-      b.style.height = "26px";
-      b.style.padding = "0";
-      b.style.fontSize = "15px";
-      b.style.lineHeight = "1";
-      b.style.fontWeight = "600";
-      b.style.opacity = "0.85";
-      b.style.cursor = "pointer";
       b.onclick = (e) => {
         e.preventDefault();
         fn();
@@ -373,7 +295,7 @@ export var TownForgePreviewView = class extends ItemView {
       dragging = true;
       lastX = e.clientX;
       lastY = e.clientY;
-      viewport.style.cursor = "grabbing";
+      viewport.toggleClass("tf-p-dragging", true);
       viewport.setPointerCapture(e.pointerId);
     });
     viewport.addEventListener("pointermove", (e) => {
@@ -390,7 +312,7 @@ export var TownForgePreviewView = class extends ItemView {
       if (!dragging)
         return;
       dragging = false;
-      viewport.style.cursor = "grab";
+      viewport.toggleClass("tf-p-dragging", false);
       try {
         viewport.releasePointerCapture(e.pointerId);
       } catch {
@@ -402,28 +324,10 @@ export var TownForgePreviewView = class extends ItemView {
       e.preventDefault();
       this.resetView();
     });
-    const footer = root.createDiv();
-    footer.style.position = "sticky";
-    footer.style.bottom = "0";
-    footer.style.marginTop = "auto";
-    footer.style.display = "flex";
-    footer.style.flexDirection = "column";
-    footer.style.gap = "6px";
-    footer.style.paddingTop = "6px";
-    footer.style.background = "var(--background-secondary)";
-    footer.style.borderTop = "1px solid var(--background-modifier-border)";
-    footer.style.zIndex = "3";
-    this.status = footer.createDiv();
-    this.status.style.fontSize = "0.72em";
-    this.status.style.opacity = "0.6";
-    const genRow = footer.createDiv();
-    genRow.style.display = "flex";
-    genRow.style.flexWrap = "wrap";
-    genRow.style.gap = "6px";
-    this.generateBtn = genRow.createEl("button", { text: "Generate" });
-    this.generateBtn.style.flex = "2 1 120px";
-    this.generateBtn.style.fontWeight = "600";
-    this.generateBtn.style.padding = "8px";
+    const footer = root.createDiv({ cls: "tf-p-footer" });
+    this.status = footer.createDiv({ cls: "tf-p-status" });
+    const genRow = footer.createDiv({ cls: "tf-p-btn-row" });
+    this.generateBtn = genRow.createEl("button", { text: "Generate", cls: "tf-p-generate-btn" });
     this.generateBtn.onclick = () => {
       this.state.seed = randomSeed();
       this.seedInputEl.value = this.state.seed;
@@ -433,33 +337,24 @@ export var TownForgePreviewView = class extends ItemView {
       this.stale = false;
       this.refresh();
     };
-    const regenBtn = genRow.createEl("button", { text: "\u21BB Same seed" });
+    const regenBtn = genRow.createEl("button", { text: "\u21BB Same seed", cls: "tf-p-regen-btn" });
     regenBtn.setAttr("aria-label", "Regenerate with the same seed");
-    regenBtn.style.flex = "1 1 100px";
     regenBtn.onclick = () => {
       this.stale = false;
       this.refresh();
     };
-    const actions = footer.createDiv();
-    actions.style.display = "flex";
-    actions.style.flexWrap = "wrap";
-    actions.style.gap = "6px";
-    const copyBtn = actions.createEl("button", { text: "Copy code" });
-    copyBtn.style.flex = "1 1 90px";
+    const actions = footer.createDiv({ cls: "tf-p-btn-row" });
+    const copyBtn = actions.createEl("button", { text: "Copy code", cls: "tf-p-action-btn" });
     copyBtn.onclick = async () => {
       await navigator.clipboard.writeText(this.codeBlock());
       new Notice("Town Forge: code block copied");
     };
-    const insertBtn = actions.createEl("button", { text: "Insert" });
-    insertBtn.style.flex = "1 1 90px";
+    const insertBtn = actions.createEl("button", { text: "Insert", cls: "tf-p-action-btn" });
     insertBtn.onclick = () => this.insertIntoNote();
-    const saveBtn = actions.createEl("button", { text: "Save PNG" });
-    saveBtn.style.flex = "1 1 90px";
+    const saveBtn = actions.createEl("button", { text: "Save PNG", cls: "tf-p-action-btn" });
     saveBtn.onclick = () => this.saveToVault();
     if (this.getEnableZoomMapExport()) {
-      const exportBtn = actions.createEl("button", { text: "Export to TTRPG Tools: Maps" });
-      exportBtn.style.flex = "1 1 100%";
-      exportBtn.style.whiteSpace = "nowrap";
+      const exportBtn = actions.createEl("button", { text: "Export to TTRPG Tools: Maps", cls: "tf-p-export-btn" });
       exportBtn.setAttr("aria-label", "Create a folder + PNG + note with a zoommap block in the configured export folder");
       exportBtn.onclick = async () => {
         const _label = exportBtn.textContent;
@@ -478,13 +373,9 @@ export var TownForgePreviewView = class extends ItemView {
       };
     }
     if (this.getShowTroubleshoot()) {
-      const troubleRow = footer.createDiv();
-      troubleRow.style.display = "flex";
-      troubleRow.style.marginTop = "2px";
-      const troubleBtn = troubleRow.createEl("button", { text: "\u{1F41E} Copy config for support" });
+      const troubleRow = footer.createDiv({ cls: "tf-p-trouble-row" });
+      const troubleBtn = troubleRow.createEl("button", { text: "\u{1F41E} Copy config for support", cls: "tf-p-trouble-btn" });
       troubleBtn.setAttr("aria-label", "Copy the full settings used for this map, to report an issue");
-      troubleBtn.style.flex = "1";
-      troubleBtn.style.fontSize = "0.78em";
       troubleBtn.onclick = async () => {
         await navigator.clipboard.writeText(this.troubleshootConfig());
         new Notice("Town Forge: full config copied \u2014 paste it to report an issue");
@@ -495,17 +386,17 @@ export var TownForgePreviewView = class extends ItemView {
   }
   updateVisibility() {
     const full = this.state.mode === "full";
-    this.settlementRowEl.style.display = full ? "flex" : "none";
+    this.settlementRowEl.toggleClass("tf-p-hidden", !full);
     if (this.dirRowEl)
-      this.dirRowEl.style.display = this.state.terrain === "coastal" ? "flex" : "none";
+      this.dirRowEl.toggleClass("tf-p-hidden", this.state.terrain !== "coastal");
     if (this.mtnSideRowEl)
-      this.mtnSideRowEl.style.display = this.state.terrain === "mountain" ? "none" : "flex";
+      this.mtnSideRowEl.toggleClass("tf-p-hidden", this.state.terrain === "mountain");
     const isCity = ["small_city", "city", "large_city", "metropolis"].includes(this.state.settlement);
     const showLandmarks = full && isCity;
     if (this.landmarksSection)
-      this.landmarksSection.style.display = showLandmarks ? "block" : "none";
+      this.landmarksSection.toggleClass("tf-p-hidden", !showLandmarks);
     if (this.landmarksRowEl)
-      this.landmarksRowEl.style.display = showLandmarks ? "flex" : "none";
+      this.landmarksRowEl.toggleClass("tf-p-hidden", !showLandmarks);
   }
   // Mark the preview stale (waiting for Generate) for expensive maps; refresh
   // immediately for cheap ones.  "Cheap" = last generation was fast.
@@ -522,7 +413,7 @@ export var TownForgePreviewView = class extends ItemView {
   paintStale() {
     if (this.generateBtn) {
       this.generateBtn.setText("Generate \u25CF");
-      this.generateBtn.style.opacity = "1";
+      this.generateBtn.setCssStyles({ opacity: "1" });
     }
     this.status.setText("Settings changed \u2014 press Generate to update.");
   }
@@ -899,7 +790,7 @@ ${body}`;
     );
     const out = await Promise.race([
       Promise.resolve(fn(app, api, ctx.seed, ctx.town, ctx.type, ctx.index, ctx.subtypes)),
-      new Promise((_, rej) => setTimeout(() => rej(new Error("name hook timed out after 5s")), 5e3))
+      new Promise((_, rej) => window.setTimeout(() => rej(new Error("name hook timed out after 5s")), 5e3))
     ]);
     if (out && typeof out === "object" && !Array.isArray(out)) {
       const name = String(out.name ?? "").trim();
@@ -970,7 +861,7 @@ ${body}`;
   applyView() {
     if (!this.canvas)
       return;
-    this.canvas.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
+    this.canvas.setCssStyles({ transform: `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})` });
   }
   clampPan() {
     const vw = this.viewport.clientWidth;

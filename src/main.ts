@@ -267,7 +267,7 @@ export function parseConfig(source) {
 export var TownForgePlugin = class extends Plugin {
   constructor() {
     super(...arguments);
-    this.settings = DEFAULT_SETTINGS;
+    this.tfSettings = DEFAULT_SETTINGS;
   }
   async onload() {
     await this.loadSettings();
@@ -277,7 +277,7 @@ export var TownForgePlugin = class extends Plugin {
         this.renderBlock(source, el, ctx);
       }
     );
-    this.registerView(TOWN_FORGE_VIEW, (leaf) => new TownForgePreviewView(leaf, () => this.settings.exportFolder, () => this.settings.templateFolder, () => this.settings.pinTypes, () => this.settings.openAfterExport, () => this.settings.groupNotesByType, () => this.settings.enableZoomMapExport, () => this.settings.showTroubleshoot, () => this.settings.scaleMultiplier, () => this.settings.distanceUnit));
+    this.registerView(TOWN_FORGE_VIEW, (leaf) => new TownForgePreviewView(leaf, () => this.tfSettings.exportFolder, () => this.tfSettings.templateFolder, () => this.tfSettings.pinTypes, () => this.tfSettings.openAfterExport, () => this.tfSettings.groupNotesByType, () => this.tfSettings.enableZoomMapExport, () => this.tfSettings.showTroubleshoot, () => this.tfSettings.scaleMultiplier, () => this.tfSettings.distanceUnit));
     this.addRibbonIcon("map", "Town Forge: open map preview", () => {
       this.activatePreview();
     });
@@ -289,16 +289,16 @@ export var TownForgePlugin = class extends Plugin {
     this.addSettingTab(new TownForgeSettingTab(this.app, this));
   }
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    if (!Array.isArray(this.settings.pinTypes) || this.settings.pinTypes.length === 0) {
-      this.settings.pinTypes = DEFAULT_PIN_TYPES.map((t) => ({ ...t }));
+    this.tfSettings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    if (!Array.isArray(this.tfSettings.pinTypes) || this.tfSettings.pinTypes.length === 0) {
+      this.tfSettings.pinTypes = DEFAULT_PIN_TYPES.map((t) => ({ ...t }));
     } else {
-      const have = new Set(this.settings.pinTypes.map((t) => t.id));
+      const have = new Set(this.tfSettings.pinTypes.map((t) => t.id));
       for (const def of DEFAULT_PIN_TYPES) {
         if (!have.has(def.id))
-          this.settings.pinTypes.push({ ...def });
+          this.tfSettings.pinTypes.push({ ...def });
       }
-      const tower = this.settings.pinTypes.find((t) => t.id === "tower");
+      const tower = this.tfSettings.pinTypes.find((t) => t.id === "tower");
       if (tower && (tower.icon === "tower" || tower.icon === "tower-observation")) {
         tower.icon = "pinRed";
       }
@@ -337,7 +337,7 @@ export var TownForgePlugin = class extends Plugin {
     }
   }
   async seedPlaceTemplates() {
-    const folder = this.settings.templateFolder || "Templates/TownForge";
+    const folder = this.tfSettings.templateFolder || "Templates/TownForge";
     const excluded = this.ensureTemplaterIgnores(folder);
     const vault = this.app.vault;
     if (!vault.getAbstractFileByPath(folder)) {
@@ -361,7 +361,7 @@ export var TownForgePlugin = class extends Plugin {
     return { created, updated, excluded };
   }
   async saveSettings() {
-    await this.saveData(this.settings);
+    await this.saveData(this.tfSettings);
   }
   async onunload() {
   }
@@ -424,8 +424,7 @@ export var TownForgePlugin = class extends Plugin {
     const { config, errors } = parseConfig(applied.source);
     for (const m of applied.errors)
       errors.push(m);
-    const wrap = el.createDiv({ cls: "town-forge-map" });
-    wrap.style.margin = "0.5em 0";
+    const wrap = el.createDiv({ cls: "town-forge-map tf-s-map-wrap" });
     try {
       const opts = {
         roughness: config.roughness,
@@ -439,21 +438,17 @@ export var TownForgePlugin = class extends Plugin {
       };
       const fullMode = config.mode === "full";
       const genSize = fullMode ? MAP_SIZE_BY_SIZE[config.settlement] ?? 1e3 : config.size;
-      const canvas = wrap.createEl("canvas");
+      const canvas = wrap.createEl("canvas", { cls: "tf-s-map-canvas" });
       canvas.width = genSize;
       canvas.height = genSize;
-      canvas.style.maxWidth = "100%";
-      canvas.style.height = "auto";
-      canvas.style.borderRadius = "6px";
-      canvas.style.display = "block";
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         wrap.createDiv({ text: "Town Forge: could not get a 2D canvas context." });
         return;
       }
       const baseDist = fullMode ? SIZE_BASE_DISTANCE[config.settlement] ?? LANDSCAPE_BASE_DISTANCE : LANDSCAPE_BASE_DISTANCE;
-      const mapDistance = config.scale ?? baseDist * this.settings.scaleMultiplier;
-      const distanceUnit = config.unit ?? this.settings.distanceUnit;
+      const mapDistance = config.scale ?? baseDist * this.tfSettings.scaleMultiplier;
+      const distanceUnit = config.unit ?? this.tfSettings.distanceUnit;
       let captionText;
       if (fullMode) {
         const full = generateFull(config.terrain, config.seed, {
@@ -476,20 +471,14 @@ export var TownForgePlugin = class extends Plugin {
         renderScene(ctx, scene, genSize, genSize, config.terrain, mapDistance, distanceUnit);
         captionText = `${config.name ? config.name + " \xB7 " : ""}${config.terrain} \xB7 seed "${config.seed}"`;
       }
-      const caption = wrap.createDiv({ cls: "town-forge-caption" });
-      caption.style.fontSize = "0.75em";
-      caption.style.opacity = "0.6";
-      caption.style.marginTop = "2px";
+      const caption = wrap.createDiv({ cls: "town-forge-caption tf-s-map-caption" });
       caption.setText(captionText);
     } catch (e) {
-      const err = wrap.createDiv({ cls: "town-forge-error" });
-      err.style.color = "var(--text-error)";
+      const err = wrap.createDiv({ cls: "town-forge-error tf-s-map-error" });
       err.setText(`Town Forge error: ${e instanceof Error ? e.message : String(e)}`);
     }
     if (errors.length) {
-      const warn = wrap.createDiv({ cls: "town-forge-warn" });
-      warn.style.color = "var(--text-warning)";
-      warn.style.fontSize = "0.75em";
+      const warn = wrap.createDiv({ cls: "town-forge-warn tf-s-map-warn" });
       warn.setText("Config notes: " + errors.join("; "));
     }
   }
@@ -504,24 +493,24 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h3", { text: "Town Forge \u2014 map scale" });
     new Setting(containerEl).setName("Distance unit").setDesc('Free text shown on the scale bar \u2014 e.g. "miles", "km", or "lengths of string".').addText(
-      (text) => text.setPlaceholder("miles").setValue(this.plugin.settings.distanceUnit).onChange(async (value) => {
-        this.plugin.settings.distanceUnit = value.trim() || "miles";
+      (text) => text.setPlaceholder("miles").setValue(this.plugin.tfSettings.distanceUnit).onChange(async (value) => {
+        this.plugin.tfSettings.distanceUnit = value.trim() || "miles";
         await this.plugin.saveSettings();
       })
     );
     new Setting(containerEl).setName("Scale multiplier").setDesc("Scales all map distances up or down together. 1.0 = defaults (a metropolis map \u2248 35 of your units across, a hamlet \u2248 1.5). Use 2 for a larger world, 0.5 for a smaller one. A single map block can override the distance entirely with a `scale:` line.").addText(
-      (text) => text.setPlaceholder("1.0").setValue(String(this.plugin.settings.scaleMultiplier)).onChange(async (value) => {
+      (text) => text.setPlaceholder("1.0").setValue(String(this.plugin.tfSettings.scaleMultiplier)).onChange(async (value) => {
         const n = parseFloat(value);
         if (!isNaN(n) && n > 0) {
-          this.plugin.settings.scaleMultiplier = n;
+          this.plugin.tfSettings.scaleMultiplier = n;
           await this.plugin.saveSettings();
         }
       })
     );
     containerEl.createEl("h3", { text: "Town Forge \u2014 export" });
     new Setting(containerEl).setName("Enable TTRPG Tools: Maps export").setDesc('Turn on the "Export to TTRPG Tools: Maps" button and its options (pin types, templates, per-type note folders). Requires the community plugin "TTRPG Tools: Maps" (formerly Zoom Map). Off by default.').addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.enableZoomMapExport).onChange(async (value) => {
-        this.plugin.settings.enableZoomMapExport = value;
+      (toggle) => toggle.setValue(this.plugin.tfSettings.enableZoomMapExport).onChange(async (value) => {
+        this.plugin.tfSettings.enableZoomMapExport = value;
         await this.plugin.saveSettings();
         this.plugin.refreshOpenPanels();
         this.display();
@@ -533,16 +522,16 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
         window.open("obsidian://show-plugin?id=zoom-map");
       })
     );
-    if (this.plugin.settings.enableZoomMapExport) {
+    if (this.plugin.tfSettings.enableZoomMapExport) {
       new Setting(containerEl).setName("Export folder").setDesc('Vault folder that "Export to TTRPG Tools: Maps" writes into. Each export creates a subfolder named after the map, holding the PNG and a note with a zoommap code block. Use a vault-relative path like "Maps" or "Atlas/Cities".').addText(
-        (text) => text.setPlaceholder("Maps").setValue(this.plugin.settings.exportFolder).onChange(async (value) => {
-          this.plugin.settings.exportFolder = value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "Maps";
+        (text) => text.setPlaceholder("Maps").setValue(this.plugin.tfSettings.exportFolder).onChange(async (value) => {
+          this.plugin.tfSettings.exportFolder = value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "Maps";
           await this.plugin.saveSettings();
         })
       );
       new Setting(containerEl).setName("Template folder").setDesc(`Vault folder holding per-building-type template notes (e.g. "Shop.md"). When a place is pinned, the matching template is copied into the map folder as that place's note, with {{name}}, {{type}}, {{subtype}} and {{town}} filled in. Leave Randomness/Templater syntax in the template \u2014 it resolves when you open the note. If no template exists for a type, a simple default note is written.`).addText(
-        (text) => text.setPlaceholder("Templates/TownForge").setValue(this.plugin.settings.templateFolder).onChange(async (value) => {
-          this.plugin.settings.templateFolder = value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "Templates/TownForge";
+        (text) => text.setPlaceholder("Templates/TownForge").setValue(this.plugin.tfSettings.templateFolder).onChange(async (value) => {
+          this.plugin.tfSettings.templateFolder = value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "Templates/TownForge";
           await this.plugin.saveSettings();
         })
       );
@@ -570,15 +559,14 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
           b.setButtonText("Create / update").setCta().onClick(async () => {
             try {
               const r = await this.plugin.seedPlaceTemplates();
-              new Notice(`Town Forge: templates ready in "${this.plugin.settings.templateFolder}" (${r.created} created, ${r.updated} updated).` + (r.excluded ? " Added it to Templater's excluded folders so Templater won't auto-run the templates." : ""), r.excluded ? 9000 : 4000);
+              new Notice(`Town Forge: templates ready in "${this.plugin.tfSettings.templateFolder}" (${r.created} created, ${r.updated} updated).` + (r.excluded ? " Added it to Templater's excluded folders so Templater won't auto-run the templates." : ""), r.excluded ? 9000 : 4000);
             } catch (e) {
               new Notice("Town Forge: template creation failed - " + (e && e.message ? e.message : String(e)), 8000);
             }
           });
         }
       );
-      const _tfSteps = containerEl.createDiv({ cls: "setting-item-description" });
-      _tfSteps.style.margin = "-0.4em 0 1em 0";
+      const _tfSteps = containerEl.createDiv({ cls: "setting-item-description tf-s-steps" });
       _tfSteps.setText("Checking set-up…");
       (async () => {
         const app2 = this.app || this.plugin.app;
@@ -615,13 +603,10 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
         } catch (e) { tpTrigger = void 0; }
 
         _tfSteps.empty();
-        const head = _tfSteps.createEl("div", { text: "Set-up checklist - do these in order:" });
-        head.style.fontWeight = "600";
-        head.style.margin = "0 0 0.35em 0";
+        const head = _tfSteps.createDiv({ text: "Set-up checklist - do these in order:", cls: "tf-s-steps-head" });
         const row = (state, text) => {
           const mark = state === true ? "✅" : state === "warn" ? "⚠️" : "❌";
-          const d = _tfSteps.createEl("div", { text: `${mark} ${text}` });
-          d.style.margin = "0.15em 0";
+          const d = _tfSteps.createDiv({ text: `${mark} ${text}`, cls: "tf-s-steps-row" });
           return d;
         };
 
@@ -652,10 +637,9 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
           _tfCreateBtn.setDisabled(!ready);
           _tfCreateBtn.setButtonText(ready ? "Create / update" : "Create / update - finish the checklist");
         }
-        const foot = _tfSteps.createEl("div", { text: ready
+        const foot = _tfSteps.createDiv({ text: ready
           ? "✅ All set - click Create / update, then generate a map and the places fill themselves in."
-          : "⚠️ Finish the red steps first. The button switches on once the Fantasy Hub generators are found." });
-        foot.style.marginTop = "0.4em";
+          : "⚠️ Finish the red steps first. The button switches on once the Fantasy Hub generators are found.", cls: "tf-s-steps-foot" });
       })();
             (() => {
         var _app = this.app || this.plugin.app;
@@ -686,14 +670,14 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
       })();
       new Setting(containerEl).setName("Export options").setHeading();
       new Setting(containerEl).setName("Open note after export").setDesc("After exporting, open the generated map note in the active pane.").addToggle(
-        (toggle) => toggle.setValue(this.plugin.settings.openAfterExport).onChange(async (value) => {
-          this.plugin.settings.openAfterExport = value;
+        (toggle) => toggle.setValue(this.plugin.tfSettings.openAfterExport).onChange(async (value) => {
+          this.plugin.tfSettings.openAfterExport = value;
           await this.plugin.saveSettings();
         })
       );
       new Setting(containerEl).setName("Group place notes by type").setDesc("Write each place note into a per-type subfolder inside the map folder (e.g. Steadwick/Shop/, Steadwick/Inn/) instead of all in one flat folder. The map note and image stay at the map-folder root, and pin links keep working.").addToggle(
-        (toggle) => toggle.setValue(this.plugin.settings.groupNotesByType).onChange(async (value) => {
-          this.plugin.settings.groupNotesByType = value;
+        (toggle) => toggle.setValue(this.plugin.tfSettings.groupNotesByType).onChange(async (value) => {
+          this.plugin.tfSettings.groupNotesByType = value;
           await this.plugin.saveSettings();
         })
       );
@@ -701,8 +685,8 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
     }
     containerEl.createEl("h3", { text: "Town Forge \u2014 panel" });
     new Setting(containerEl).setName("Show troubleshooting button").setDesc('Show the "\u{1F41E} Copy config for support" button in the Town Forge panel. Handy for bug reports. Off by default.').addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.showTroubleshoot).onChange(async (value) => {
-        this.plugin.settings.showTroubleshoot = value;
+      (toggle) => toggle.setValue(this.plugin.tfSettings.showTroubleshoot).onChange(async (value) => {
+        this.plugin.tfSettings.showTroubleshoot = value;
         await this.plugin.saveSettings();
         this.plugin.refreshOpenPanels();
       })
@@ -718,15 +702,15 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
     const rowsHost = containerEl.createDiv();
     const redraw = () => {
       rowsHost.empty();
-      this.plugin.settings.pinTypes.forEach((t, i) => this.renderPinTypeRow(rowsHost, t, i, redraw));
+      this.plugin.tfSettings.pinTypes.forEach((t, i) => this.renderPinTypeRow(rowsHost, t, i, redraw));
     };
     redraw();
     new Setting(containerEl).addButton((b) => b.setButtonText("Add pin type").onClick(async () => {
-      this.plugin.settings.pinTypes.push(newCustomPinType());
+      this.plugin.tfSettings.pinTypes.push(newCustomPinType());
       await this.plugin.saveSettings();
       redraw();
     })).addButton((b) => b.setButtonText("Reset to defaults").setWarning().onClick(async () => {
-      this.plugin.settings.pinTypes = DEFAULT_PIN_TYPES.map((t) => ({ ...t }));
+      this.plugin.tfSettings.pinTypes = DEFAULT_PIN_TYPES.map((t) => ({ ...t }));
       await this.plugin.saveSettings();
       redraw();
       this.display();
@@ -735,83 +719,60 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
     const details = containerEl.createEl("details");
     details.createEl("summary", { text: "Advanced: edit pin types as JSON" });
     details.createEl("p", { text: "Power users: edit the full config here (and write custom JS name hooks). In a hook, these are in scope: app, api (Randomness if installed), seed, town, type, index \u2014 return a string. Example: return (await api.rollUnscoped('ShopName')).result", cls: "setting-item-description" });
-    const ta = details.createEl("textarea");
-    ta.style.width = "100%";
-    ta.style.minHeight = "220px";
-    ta.style.fontFamily = "monospace";
-    ta.value = pinTypesToJson(this.plugin.settings.pinTypes);
-    const status = details.createEl("div", { cls: "setting-item-description" });
+    const ta = details.createEl("textarea", { cls: "tf-s-json-editor" });
+    ta.value = pinTypesToJson(this.plugin.tfSettings.pinTypes);
+    const status = details.createDiv({ cls: "setting-item-description" });
     const applyBtn = details.createEl("button", { text: "Apply JSON" });
     applyBtn.onclick = async () => {
       const { types, error } = parsePinTypesJson(ta.value);
       if (error || !types) {
         status.setText(`\u26A0 ${error ?? "Parse failed"}`);
-        status.style.color = "var(--text-error)";
+        status.toggleClass("tf-s-status-success", false);
+        status.toggleClass("tf-s-status-error", true);
         return;
       }
-      this.plugin.settings.pinTypes = types;
+      this.plugin.tfSettings.pinTypes = types;
       await this.plugin.saveSettings();
       status.setText(`\u2713 Applied ${types.length} pin types`);
-      status.style.color = "var(--text-success)";
+      status.toggleClass("tf-s-status-error", false);
+      status.toggleClass("tf-s-status-success", true);
       redraw();
     };
   }
   // Collapsible visual key: each drawn building, what it is, and the template
   // the anchoring pin type requests.
   renderBuildingKey(containerEl) {
-    const details = containerEl.createEl("details");
-    details.style.margin = "8px 0 14px";
-    const summary = details.createEl("summary", { text: "Building key \u2014 what each map building is" });
-    summary.style.cursor = "pointer";
-    summary.style.fontWeight = "600";
+    const details = containerEl.createEl("details", { cls: "tf-s-key-details" });
+    const summary = details.createEl("summary", { text: "Building key \u2014 what each map building is", cls: "tf-s-key-summary" });
     details.createEl("p", {
       text: "These are the buildings Town Forge draws on the map. Each row shows the building, what anchors to it, and the template note its pin type requests (named after the note type). Sampled types (shops, etc.) have no unique building \u2014 they sit on ordinary houses.",
       cls: "setting-item-description"
     });
     const byAnchor = /* @__PURE__ */ new Map();
-    for (const t of this.plugin.settings.pinTypes) {
+    for (const t of this.plugin.tfSettings.pinTypes) {
       if (!t.enabled)
         continue;
       if ((t.placement === "anchored" || t.placement === "both") && t.anchor && !byAnchor.has(t.anchor)) {
         byAnchor.set(t.anchor, t);
       }
     }
-    const grid = details.createDiv();
-    grid.style.display = "flex";
-    grid.style.flexWrap = "wrap";
-    grid.style.gap = "10px";
+    const grid = details.createDiv({ cls: "tf-s-key-grid" });
     for (const entry of BUILDING_KEY) {
-      const card = grid.createDiv();
-      card.style.width = "150px";
-      card.style.border = "1px solid var(--background-modifier-border)";
-      card.style.borderRadius = "8px";
-      card.style.padding = "8px";
-      card.style.background = "var(--background-secondary)";
-      card.style.display = "flex";
-      card.style.flexDirection = "column";
-      card.style.gap = "4px";
-      const img = card.createEl("img");
+      const card = grid.createDiv({ cls: "tf-s-key-card" });
+      const img = card.createEl("img", { cls: "tf-s-key-img" });
       img.src = BUILDING_IMAGES[entry.key] ?? "";
-      img.style.width = "100%";
-      img.style.borderRadius = "4px";
-      img.style.imageRendering = "auto";
-      const title = card.createEl("strong", { text: entry.label });
-      title.style.fontSize = "0.85em";
-      const desc = card.createEl("span", { text: entry.note });
-      desc.style.fontSize = "0.72em";
-      desc.style.opacity = "0.75";
+      const title = card.createEl("strong", { text: entry.label, cls: "tf-s-key-title" });
+      const desc = card.createSpan({ text: entry.note, cls: "tf-s-key-desc" });
       const pin = entry.anchor ? byAnchor.get(entry.anchor) : null;
-      const mapping = card.createEl("span");
-      mapping.style.fontSize = "0.72em";
-      mapping.style.marginTop = "2px";
+      const mapping = card.createSpan({ cls: "tf-s-key-mapping" });
       if (entry.anchor && pin) {
         mapping.setText(`\u2192 ${pin.noteType} \xB7 template: ${pin.noteType}.md`);
       } else if (entry.anchor && !pin) {
         mapping.setText("\u2192 no enabled pin type");
-        mapping.style.opacity = "0.6";
+        mapping.addClass("tf-s-key-mapping-dim");
       } else {
         mapping.setText("\u2192 used by sampled types (shops, inns\u2026)");
-        mapping.style.opacity = "0.6";
+        mapping.addClass("tf-s-key-mapping-dim");
       }
     }
   }
@@ -819,17 +780,8 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
     const save = async () => {
       await this.plugin.saveSettings();
     };
-    const card = host.createDiv();
-    card.style.border = "1px solid var(--background-modifier-border)";
-    card.style.borderRadius = "8px";
-    card.style.padding = "10px 12px";
-    card.style.marginBottom = "8px";
-    card.style.background = "var(--background-secondary)";
-    const header = card.createDiv();
-    header.style.display = "flex";
-    header.style.alignItems = "center";
-    header.style.gap = "8px";
-    header.style.marginBottom = "8px";
+    const card = host.createDiv({ cls: "tf-s-pin-card" });
+    const header = card.createDiv({ cls: "tf-s-pin-header" });
     const enable = header.createEl("input", { type: "checkbox" });
     enable.checked = t.enabled;
     enable.title = "Enabled";
@@ -837,77 +789,54 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
       t.enabled = enable.checked;
       await save();
     };
-    const heading = header.createEl("strong", { text: t.noteType || "(unnamed)" });
-    heading.style.flex = "1";
-    heading.style.fontSize = "1em";
-    const badge = header.createEl("span", { text: t.placement });
-    badge.style.fontSize = "0.75em";
-    badge.style.opacity = "0.7";
-    badge.style.padding = "1px 6px";
-    badge.style.border = "1px solid var(--background-modifier-border)";
-    badge.style.borderRadius = "10px";
-    const del = header.createEl("button", { text: "Remove" });
-    del.style.fontSize = "0.8em";
+    const heading = header.createEl("strong", { text: t.noteType || "(unnamed)", cls: "tf-s-pin-heading" });
+    const badge = header.createSpan({ text: t.placement, cls: "tf-s-pin-badge" });
+    const del = header.createEl("button", { text: "Remove", cls: "tf-s-pin-remove" });
     del.onclick = async () => {
-      this.plugin.settings.pinTypes.splice(index, 1);
+      this.plugin.tfSettings.pinTypes.splice(index, 1);
       await save();
       redraw();
     };
-    const grid = card.createDiv();
-    grid.style.display = "flex";
-    grid.style.flexWrap = "wrap";
-    grid.style.gap = "10px 14px";
-    grid.style.alignItems = "flex-end";
+    const grid = card.createDiv({ cls: "tf-s-pin-grid" });
     const field = (label, widthEm) => {
-      const wrap = grid.createDiv();
-      wrap.style.display = "flex";
-      wrap.style.flexDirection = "column";
-      wrap.style.gap = "2px";
-      wrap.style.minWidth = `${widthEm}em`;
-      const lab = wrap.createEl("label", { text: label });
-      lab.style.fontSize = "0.72em";
-      lab.style.opacity = "0.7";
+      const wrap = grid.createDiv({ cls: "tf-s-pin-field" });
+      wrap.setCssStyles({ minWidth: `${widthEm}em` });
+      const lab = wrap.createEl("label", { text: label, cls: "tf-s-pin-field-label" });
       return wrap;
     };
     const noteTypeWrap = field("Note type", 9);
-    const noteTypeInput = noteTypeWrap.createEl("input", { type: "text", value: t.noteType });
-    noteTypeInput.style.width = "100%";
+    const noteTypeInput = noteTypeWrap.createEl("input", { type: "text", value: t.noteType, cls: "tf-s-full-width" });
     noteTypeInput.onchange = async () => {
       t.noteType = noteTypeInput.value.trim() || t.noteType;
       heading.setText(t.noteType);
       await save();
     };
     const iconWrap = field("Pin icon (Zoom Map key)", 11);
-    const iconInput = iconWrap.createEl("input", { type: "text", value: t.icon });
-    iconInput.style.width = "100%";
+    const iconInput = iconWrap.createEl("input", { type: "text", value: t.icon, cls: "tf-s-full-width" });
     iconInput.onchange = async () => {
       t.icon = iconInput.value.trim() || t.icon;
       await save();
     };
     const layerWrap = field("Layer", 9);
-    const layerInput = layerWrap.createEl("input", { type: "text", value: t.layerName });
-    layerInput.style.width = "100%";
+    const layerInput = layerWrap.createEl("input", { type: "text", value: t.layerName, cls: "tf-s-full-width" });
     layerInput.onchange = async () => {
       t.layerName = layerInput.value.trim() || t.layerName;
       await save();
     };
     const minWrap = field("Min", 4);
-    const minInput = minWrap.createEl("input", { type: "number", value: String(t.countMin) });
-    minInput.style.width = "100%";
+    const minInput = minWrap.createEl("input", { type: "number", value: String(t.countMin), cls: "tf-s-full-width" });
     minInput.onchange = async () => {
       t.countMin = Math.max(0, parseInt(minInput.value) || 0);
       await save();
     };
     const maxWrap = field("Max", 4);
-    const maxInput = maxWrap.createEl("input", { type: "number", value: String(t.countMax) });
-    maxInput.style.width = "100%";
+    const maxInput = maxWrap.createEl("input", { type: "number", value: String(t.countMax), cls: "tf-s-full-width" });
     maxInput.onchange = async () => {
       t.countMax = Math.max(t.countMin, parseInt(maxInput.value) || t.countMin);
       await save();
     };
     const modeWrap = field("Count mode", 7);
-    const modeSel = modeWrap.createEl("select");
-    modeSel.style.width = "100%";
+    const modeSel = modeWrap.createEl("select", { cls: "tf-s-full-width" });
     for (const m of ["scaled", "fixed"]) {
       const o = modeSel.createEl("option", { text: m, value: m });
       if (t.countMode === m)
@@ -918,8 +847,7 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
       await save();
     };
     const placeWrap = field("Placement", 8);
-    const placeSel = placeWrap.createEl("select");
-    placeSel.style.width = "100%";
+    const placeSel = placeWrap.createEl("select", { cls: "tf-s-full-width" });
     for (const p of ["sampled", "anchored", "both"]) {
       const o = placeSel.createEl("option", { text: p, value: p });
       if (t.placement === p)
@@ -933,8 +861,7 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
     };
     if (t.placement === "anchored" || t.placement === "both") {
       const anchorWrap = field("Anchor (real structure)", 10);
-      const anchorSel = anchorWrap.createEl("select");
-      anchorSel.style.width = "100%";
+      const anchorSel = anchorWrap.createEl("select", { cls: "tf-s-full-width" });
       const anchors = ["castle", "cathedral", "market", "barracks", "dock", "mill", "stable", "inn", "tower", "generic", "farm"];
       for (const a of anchors) {
         const o = anchorSel.createEl("option", { text: a, value: a });
@@ -949,8 +876,7 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
       };
     }
     const nameWrap = field("Naming", 8);
-    const nameSel = nameWrap.createEl("select");
-    nameSel.style.width = "100%";
+    const nameSel = nameWrap.createEl("select", { cls: "tf-s-full-width" });
     for (const nm of [["builtin", "built-in"], ["js", "custom JS"]]) {
       const o = nameSel.createEl("option", { text: nm[1], value: nm[0] });
       if (t.nameMode === nm[0])
@@ -962,38 +888,22 @@ export var TownForgeSettingTab = class extends PluginSettingTab {
       redraw();
     };
     if (t.nameMode === "js") {
-      const jsWrap = card.createDiv();
-      jsWrap.style.marginTop = "8px";
-      const lab = jsWrap.createEl("label", { text: "Name JS \u2014 in scope: app, api, seed, town, type, index, subtypes \u2014 return a string, or { name, subtype } to set both" });
-      lab.style.fontSize = "0.72em";
-      lab.style.opacity = "0.7";
-      lab.style.display = "block";
-      lab.style.marginBottom = "2px";
-      const ta = jsWrap.createEl("textarea");
+      const jsWrap = card.createDiv({ cls: "tf-s-pin-subsection" });
+      const lab = jsWrap.createEl("label", { text: "Name JS \u2014 in scope: app, api, seed, town, type, index, subtypes \u2014 return a string, or { name, subtype } to set both", cls: "tf-s-pin-block-label" });
+      const ta = jsWrap.createEl("textarea", { cls: "tf-s-pin-js-editor" });
       ta.value = t.nameJs ?? "";
       ta.placeholder = `const [subtype, name] = (await api.rollUnscoped("TF-ShopPick")).result.split("|");
 return { name, subtype };`;
-      ta.style.width = "100%";
-      ta.style.minHeight = "54px";
-      ta.style.fontFamily = "monospace";
-      ta.style.fontSize = "0.8em";
       ta.onchange = async () => {
         t.nameJs = ta.value;
         await save();
       };
     }
-    const subWrap = card.createDiv();
-    subWrap.style.marginTop = "8px";
-    const subLab = subWrap.createEl("label", { text: "Subtypes (comma-separated) \u2014 written to frontmatter as subtype:. The JS hook returning { name, subtype } keeps name+subtype correlated; the built-in picks from this list but does not guarantee a match." });
-    subLab.style.fontSize = "0.72em";
-    subLab.style.opacity = "0.7";
-    subLab.style.display = "block";
-    subLab.style.marginBottom = "2px";
-    const subIn = subWrap.createEl("input", { type: "text" });
+    const subWrap = card.createDiv({ cls: "tf-s-pin-subsection" });
+    const subLab = subWrap.createEl("label", { text: "Subtypes (comma-separated) \u2014 written to frontmatter as subtype:. The JS hook returning { name, subtype } keeps name+subtype correlated; the built-in picks from this list but does not guarantee a match.", cls: "tf-s-pin-block-label" });
+    const subIn = subWrap.createEl("input", { type: "text", cls: "tf-s-pin-sub-input" });
     subIn.value = (t.subtypes ?? []).join(", ");
     subIn.placeholder = "e.g. general, weapon, armor, alchemy, magic";
-    subIn.style.width = "100%";
-    subIn.style.fontSize = "0.8em";
     subIn.onchange = async () => {
       const arr = subIn.value.split(",").map((s) => s.trim()).filter((s) => s.length);
       t.subtypes = arr.length ? arr : void 0;

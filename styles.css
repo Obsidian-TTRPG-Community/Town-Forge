@@ -1,0 +1,409 @@
+/* Town Forge styles
+ * All plugin styling lives here so themes and snippets can override it.
+ * tf-s-*  settings tab, modals and the rendered code-block output (src/main.ts)
+ * tf-p-*  the live preview panel (src/panel.ts)
+ */
+
+/* Town Forge — styles extracted from src/main.ts (namespace: tf-s-) */
+
+/* ---- Rendered map block (renderBlock) ---------------------------------- */
+.tf-s-map-wrap {
+  margin: 0.5em 0;
+}
+
+.tf-s-map-canvas {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  display: block;
+}
+
+.tf-s-map-caption {
+  font-size: 0.75em;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+.tf-s-map-error {
+  color: var(--text-error);
+}
+
+.tf-s-map-warn {
+  color: var(--text-warning);
+  font-size: 0.75em;
+}
+
+/* ---- Set-up checklist (settings tab) ----------------------------------- */
+.tf-s-steps {
+  margin: -0.4em 0 1em 0;
+}
+
+.tf-s-steps-head {
+  font-weight: 600;
+  margin: 0 0 0.35em 0;
+}
+
+.tf-s-steps-row {
+  margin: 0.15em 0;
+}
+
+.tf-s-steps-foot {
+  margin-top: 0.4em;
+}
+
+/* ---- Advanced JSON pin-type editor ------------------------------------- */
+.tf-s-json-editor {
+  width: 100%;
+  min-height: 220px;
+  font-family: monospace;
+}
+
+.tf-s-status-error {
+  color: var(--text-error);
+}
+
+.tf-s-status-success {
+  color: var(--text-success);
+}
+
+/* ---- Building key ------------------------------------------------------ */
+.tf-s-key-details {
+  margin: 8px 0 14px;
+}
+
+.tf-s-key-summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tf-s-key-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tf-s-key-card {
+  width: 150px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--background-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tf-s-key-img {
+  width: 100%;
+  border-radius: 4px;
+  image-rendering: auto;
+}
+
+.tf-s-key-title {
+  font-size: 0.85em;
+}
+
+.tf-s-key-desc {
+  font-size: 0.72em;
+  opacity: 0.75;
+}
+
+.tf-s-key-mapping {
+  font-size: 0.72em;
+  margin-top: 2px;
+}
+
+.tf-s-key-mapping-dim {
+  opacity: 0.6;
+}
+
+/* ---- Pin type rows ----------------------------------------------------- */
+.tf-s-pin-card {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--background-secondary);
+}
+
+.tf-s-pin-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tf-s-pin-heading {
+  flex: 1;
+  font-size: 1em;
+}
+
+.tf-s-pin-badge {
+  font-size: 0.75em;
+  opacity: 0.7;
+  padding: 1px 6px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+}
+
+.tf-s-pin-remove {
+  font-size: 0.8em;
+}
+
+.tf-s-pin-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: flex-end;
+}
+
+/* min-width is set per field at runtime with setCssStyles(). */
+.tf-s-pin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tf-s-pin-field-label {
+  font-size: 0.72em;
+  opacity: 0.7;
+}
+
+.tf-s-full-width {
+  width: 100%;
+}
+
+.tf-s-pin-subsection {
+  margin-top: 8px;
+}
+
+.tf-s-pin-block-label {
+  font-size: 0.72em;
+  opacity: 0.7;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.tf-s-pin-js-editor {
+  width: 100%;
+  min-height: 54px;
+  font-family: monospace;
+  font-size: 0.8em;
+}
+
+.tf-s-pin-sub-input {
+  width: 100%;
+  font-size: 0.8em;
+}
+
+
+/* Town Forge — preview panel (src/panel.ts).  Namespace: tf-p- */
+
+.tf-p-root {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.tf-p-root .tf-p-title {
+  margin: 0 0 2px 0;
+}
+
+.tf-p-root .tf-p-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tf-p-root .tf-p-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tf-p-root .tf-p-row-label {
+  font-size: 0.78em;
+  opacity: 0.85;
+  min-width: 82px;
+}
+
+.tf-p-root .tf-p-section-label {
+  font-size: 0.68em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+  margin-top: 2px;
+}
+
+.tf-p-root .tf-p-select {
+  flex: 1;
+}
+
+.tf-p-root .tf-p-text-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.tf-p-root .tf-p-auto-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75em;
+}
+
+.tf-p-root .tf-p-edge-label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.75em;
+}
+
+.tf-p-root .tf-p-slider {
+  flex: 1;
+}
+
+.tf-p-root .tf-p-slider-out {
+  font-size: 0.72em;
+  min-width: 30px;
+  text-align: right;
+  opacity: 0.7;
+}
+
+.tf-p-root .tf-p-mtn-note {
+  font-size: 0.6em;
+  opacity: 0.4;
+}
+
+.tf-p-root .tf-p-tri-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tf-p-root .tf-p-tri-btn {
+  font-size: 0.72em;
+  flex: 1;
+  min-width: 70px;
+  opacity: 1;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.tf-p-root .tf-p-tri-btn.tf-p-tri-auto {
+  opacity: 0.6;
+}
+
+.tf-p-root .tf-p-tri-btn.tf-p-tri-on {
+  font-weight: 600;
+}
+
+.tf-p-root .tf-p-tri-btn.tf-p-tri-off {
+  text-decoration: line-through;
+}
+
+.tf-p-root .tf-p-canvas-wrap {
+  margin-top: 4px;
+}
+
+.tf-p-root .tf-p-viewport {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.tf-p-root .tf-p-viewport.tf-p-dragging {
+  cursor: grabbing;
+}
+
+.tf-p-root .tf-p-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.tf-p-root .tf-p-zoom-bar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 2;
+}
+
+.tf-p-root .tf-p-zoom-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 600;
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.tf-p-root .tf-p-footer {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+  background: var(--background-secondary);
+  border-top: 1px solid var(--background-modifier-border);
+  z-index: 3;
+}
+
+.tf-p-root .tf-p-status {
+  font-size: 0.72em;
+  opacity: 0.6;
+}
+
+.tf-p-root .tf-p-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tf-p-root .tf-p-generate-btn {
+  flex: 2 1 120px;
+  font-weight: 600;
+  padding: 8px;
+}
+
+.tf-p-root .tf-p-regen-btn {
+  flex: 1 1 100px;
+}
+
+.tf-p-root .tf-p-action-btn {
+  flex: 1 1 90px;
+}
+
+.tf-p-root .tf-p-export-btn {
+  flex: 1 1 100%;
+  white-space: nowrap;
+}
+
+.tf-p-root .tf-p-trouble-row {
+  display: flex;
+  margin-top: 2px;
+}
+
+.tf-p-root .tf-p-trouble-btn {
+  flex: 1;
+  font-size: 0.78em;
+}
+
+/* Visibility toggle — must come last so it wins over the display rules above. */
+.tf-p-root .tf-p-hidden {
+  display: none;
+}
