@@ -1,20 +1,20 @@
-export var SCALE_REFERENCE_HOUSES = 600;
-export var SHOP_LISTS = {
+export const SCALE_REFERENCE_HOUSES = 600;
+export const SHOP_LISTS = {
   surnames: ["Oakhart", "Vance", "Hollick", "Jessop", "Pemberton", "Ironhand", "Foxglove", "Thornwood", "Ashby", "Crane", "Marlow", "Pike", "Quill", "Rooke", "Sallow", "Tanner", "Underhill", "Welk", "Brightwater", "Dunmore", "Fenwick", "Garrow"],
   adjectives: ["Sleeping", "Crooked", "Salty", "Drunken", "Rusty", "Silver", "Broken", "Weeping", "Faithful", "Singing", "One-Eyed", "Gilded", "Whistling", "Hollow"],
   nouns: ["Forge", "Smithy", "Apothecary", "Herbalist", "Mercantile", "General Goods", "Tannery", "Bakery", "Curiosities", "Provisioner", "Cooperage", "Chandlery"]
 };
-export var INN_LISTS = {
+export const INN_LISTS = {
   surnames: ["Bramble", "Hart", "Crow", "Stagg", "Mead", "Barrow", "Finch", "Hale"],
   adjectives: ["Weeping", "Broken", "Salty", "Rusty", "Crooked", "Faithful", "Singing", "One-Eyed", "Silver", "Drunken", "Sleeping", "Laughing", "Prancing", "Gilded"],
   nouns: ["Anchor", "Lantern", "Tower", "Bell", "Hare", "Fox", "Eagle", "Stag", "Tankard", "Crown", "Barrel", "Hound"]
 };
-export var GENERIC_LISTS = {
+export const GENERIC_LISTS = {
   surnames: ["Oakhart", "Vance", "Hollick", "Thornwood", "Ashby", "Marlow", "Dunmore", "Fenwick"],
   adjectives: ["Old", "New", "North", "South", "High", "Low", "Stone", "River"],
   nouns: ["House", "Place", "Yard", "Holding", "Lodge", "Hall"]
 };
-export var DEFAULT_PIN_TYPES = [
+export const DEFAULT_PIN_TYPES = [
   // Anchored to real structures Town Forge builds.
   { id: "castle", noteType: "Castle", enabled: true, icon: "castle", layerName: "Civic", placement: "anchored", anchor: "castle", countMin: 1, countMax: 1, countMode: "fixed", nameMode: "builtin", nameLists: { surnames: [], adjectives: [], nouns: [], proper: ["The Keep", "Castle Greymark", "Castle Thorn", "The Citadel", "Highhold Keep", "Castle Vance", "The Old Castle", "Ravenshold"] } },
   { id: "cathedral", noteType: "Temple", enabled: true, icon: "place-of-worship", layerName: "Religious", placement: "anchored", anchor: "cathedral", countMin: 1, countMax: 1, countMode: "fixed", nameMode: "builtin", nameLists: { surnames: [], adjectives: [], nouns: [], proper: ["The Temple of Light", "Shrine of Saint Aldric", "The Grand Cathedral", "Chapel of Saint Mirelle", "The High Sanctuary", "Temple of the Dawn"] } },

@@ -191,7 +191,7 @@ export function builtinName(lists, seed, used) {
   used.add(name);
   return name;
 }
-export var _idState = 0;
+export let _idState = 0;
 export function shortId(n) {
   _idState = _idState * 1664525 + 1013904223 + n >>> 0;
   return "marker_poi_" + _idState.toString(36).slice(0, 6).padStart(6, "0");

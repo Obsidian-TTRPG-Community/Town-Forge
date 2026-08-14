@@ -17,7 +17,7 @@ export function makeRng(seed) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-export var Noise2D = class {
+export const Noise2D = class {
   constructor(rng) {
     const N = 256;
     const p = [];

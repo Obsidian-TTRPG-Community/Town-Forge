@@ -2670,8 +2670,6 @@ function buildDock(rng, scene, townSite, zoneRadius, size, w, h, terrain) {
     }
     return false;
   };
-  const margin = Math.min(w, h) * 0.04;
-  const inCanvas = (p) => p.x >= -margin && p.x <= w + margin && p.y >= -margin && p.y <= h + margin;
   let boundary;
   if (footprint && footprint.length >= 3) {
     boundary = footprint;
@@ -3724,27 +3722,6 @@ function buildCityFootprint(rng, scene, townSite, coreRadius, armLength, w, h) {
     if (bankside)
       return bankside;
   }
-  const distToPolyEdge = (pt, poly) => {
-    let best = Infinity;
-    const n = poly.length;
-    for (let i = 0; i < n; i++) {
-      const a = poly[i];
-      const b = poly[(i + 1) % n];
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const seg2 = dx * dx + dy * dy;
-      let d;
-      if (seg2 < 1e-9)
-        d = Math.hypot(pt.x - a.x, pt.y - a.y);
-      else {
-        const t = Math.max(0, Math.min(1, ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / seg2));
-        d = Math.hypot(pt.x - (a.x + dx * t), pt.y - (a.y + dy * t));
-      }
-      if (d < best)
-        best = d;
-    }
-    return best;
-  };
   const roads = scene.roads;
   const artAngles = [];
   for (const road of roads) {
@@ -7270,7 +7247,6 @@ function drawDock(ctx, dock) {
     ctx.fill();
   };
   const PLANK = "rgb(150,120,86)";
-  const PLANK_DK = "rgb(96,72,48)";
   const PLANK_EDGE = "rgba(60,44,28,0.85)";
   if (dock.lane && dock.lane.length >= 2) {
     ctx.save();
@@ -8620,7 +8596,7 @@ var TownForgePreviewView = class extends import_obsidian.ItemView {
   ensureTypeFrontmatter(body, type, town, subtype, size) {
     body = body.replace(/\r\n/g, "\n");
     const fmMatch = body.match(/^---\n([\s\S]*?)\n---\n?/);
-    const yamlVal = (v) => /[:#\-?\[\]{},&*!|>'"%@`]/.test(v) ? JSON.stringify(v) : v;
+    const yamlVal = (v) => /[:#\-?[\]{},&*!|>'"%@`]/.test(v) ? JSON.stringify(v) : v;
     const hasSub = !!(subtype && subtype.trim());
     const hasSize = !!(size && size.trim());
     if (fmMatch) {
@@ -10923,8 +10899,8 @@ function parseConfig(source) {
   return { config, errors };
 }
 var TownForgePlugin = class extends import_obsidian2.Plugin {
-  constructor() {
-    super(...arguments);
+  constructor(...args) {
+    super(...args);
     this.tfSettings = DEFAULT_SETTINGS;
   }
   async onload() {
@@ -10937,7 +10913,7 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
     );
     this.registerView(TOWN_FORGE_VIEW, (leaf) => new TownForgePreviewView(leaf, () => this.tfSettings.exportFolder, () => this.tfSettings.templateFolder, () => this.tfSettings.pinTypes, () => this.tfSettings.openAfterExport, () => this.tfSettings.groupNotesByType, () => this.tfSettings.enableZoomMapExport, () => this.tfSettings.showTroubleshoot, () => this.tfSettings.scaleMultiplier, () => this.tfSettings.distanceUnit));
     this.addRibbonIcon("map", "Town Forge: open map preview", () => {
-      this.activatePreview();
+      void this.activatePreview();
     });
     this.addCommand({
       id: "open-town-forge-preview",
@@ -11021,7 +10997,7 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
   async saveSettings() {
     await this.saveData(this.tfSettings);
   }
-  async onunload() {
+  onunload() {
   }
   // Rebuild any open Town Forge panels so settings changes (which buttons show,
   // etc.) take effect immediately without reopening the view.
@@ -11036,13 +11012,13 @@ var TownForgePlugin = class extends import_obsidian2.Plugin {
     const { workspace } = this.app;
     const existing = workspace.getLeavesOfType(TOWN_FORGE_VIEW);
     if (existing.length > 0) {
-      workspace.revealLeaf(existing[0]);
+      await workspace.revealLeaf(existing[0]);
       return;
     }
     const leaf = workspace.getRightLeaf(false);
     if (leaf) {
       await leaf.setViewState({ type: TOWN_FORGE_VIEW, active: true });
-      workspace.revealLeaf(leaf);
+      await workspace.revealLeaf(leaf);
     }
   }
   // Merge note Properties into a map block. Base layer comes from frontmatter -
@@ -11227,7 +11203,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
       );
       const _tfSteps = containerEl.createDiv({ cls: "setting-item-description tf-s-steps" });
       _tfSteps.setText("Checking set-up\u2026");
-      (async () => {
+      void (async () => {
         const app2 = this.app || this.plugin.app;
         const registry = app2.plugins && app2.plugins.plugins ? app2.plugins.plugins : {};
         const rnd = registry["randomness"] || null;
@@ -11261,7 +11237,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
           tpTrigger = void 0;
         }
         _tfSteps.empty();
-        const head = _tfSteps.createDiv({ text: "Set-up checklist - do these in order:", cls: "tf-s-steps-head" });
+        _tfSteps.createDiv({ text: "Set-up checklist - do these in order:", cls: "tf-s-steps-head" });
         const row = (state, text) => {
           const mark = state === true ? "\u2705" : state === "warn" ? "\u26A0\uFE0F" : "\u274C";
           const d = _tfSteps.createDiv({ text: `${mark} ${text}`, cls: "tf-s-steps-row" });
@@ -11292,28 +11268,28 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
           _tfCreateBtn.setDisabled(!ready);
           _tfCreateBtn.setButtonText(ready ? "Create / update" : "Create / update - finish the checklist");
         }
-        const foot = _tfSteps.createDiv({ text: ready ? "\u2705 All set - click Create / update, then generate a map and the places fill themselves in." : "\u26A0\uFE0F Finish the red steps first. The button switches on once the Fantasy Hub generators are found.", cls: "tf-s-steps-foot" });
+        _tfSteps.createDiv({ text: ready ? "\u2705 All set - click Create / update, then generate a map and the places fill themselves in." : "\u26A0\uFE0F Finish the red steps first. The button switches on once the Fantasy Hub generators are found.", cls: "tf-s-steps-foot" });
       })();
       (() => {
-        var _app = this.app || this.plugin.app;
-        var _mani = _app.plugins && _app.plugins.manifests ? _app.plugins.manifests["zoom-map"] : null;
+        let _app = this.app || this.plugin.app;
+        let _mani = _app.plugins && _app.plugins.manifests ? _app.plugins.manifests["zoom-map"] : null;
         if (!_mani)
           return;
         new import_obsidian2.Setting(containerEl).setName("Send pin icons to TTRPG Tools - Maps").setDesc('Detected TTRPG Tools - Maps ("' + (_mani.name || "Zoom Map") + `"). Write Town Forge's pin icons into its icon library so each pin shows its icon on the map. Safe to click again - it only adds or updates these icons and leaves your others alone.`).addButton(
           (b) => b.setButtonText("Send icons").setCta().onClick(async () => {
             try {
-              var app2 = this.app || this.plugin.app;
-              var zm = app2.plugins.plugins["zoom-map"];
+              let app2 = this.app || this.plugin.app;
+              let zm = app2.plugins.plugins["zoom-map"];
               if (!zm) {
                 new import_obsidian2.Notice("TTRPG Tools - Maps is installed but not enabled - enable it first.", 7e3);
                 return;
               }
               if (!Array.isArray(zm.settings.icons))
                 zm.settings.icons = [];
-              var byKey = new Map(zm.settings.icons.map((i) => [i.key, i]));
-              var added = 0, updated = 0;
-              for (var k = 0; k < TF_ICON_LIBRARY.length; k++) {
-                var ic = TF_ICON_LIBRARY[k];
+              let byKey = new Map(zm.settings.icons.map((i) => [i.key, i]));
+              let added = 0, updated = 0;
+              for (let k = 0; k < TF_ICON_LIBRARY.length; k++) {
+                let ic = TF_ICON_LIBRARY[k];
                 if (byKey.has(ic.key))
                   updated++;
                 else
@@ -11405,7 +11381,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
   renderBuildingKey(containerEl) {
     var _a;
     const details = containerEl.createEl("details", { cls: "tf-s-key-details" });
-    const summary = details.createEl("summary", { text: "Building key \u2014 what each map building is", cls: "tf-s-key-summary" });
+    details.createEl("summary", { text: "Building key \u2014 what each map building is", cls: "tf-s-key-summary" });
     details.createEl("p", {
       text: "These are the buildings Town Forge draws on the map. Each row shows the building, what anchors to it, and the template note its pin type requests (named after the note type). Sampled types (shops, etc.) have no unique building \u2014 they sit on ordinary houses.",
       cls: "setting-item-description"
@@ -11423,8 +11399,8 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
       const card = grid.createDiv({ cls: "tf-s-key-card" });
       const img = card.createEl("img", { cls: "tf-s-key-img" });
       img.src = (_a = BUILDING_IMAGES[entry.key]) != null ? _a : "";
-      const title = card.createEl("strong", { text: entry.label, cls: "tf-s-key-title" });
-      const desc = card.createSpan({ text: entry.note, cls: "tf-s-key-desc" });
+      card.createEl("strong", { text: entry.label, cls: "tf-s-key-title" });
+      card.createSpan({ text: entry.note, cls: "tf-s-key-desc" });
       const pin = entry.anchor ? byAnchor.get(entry.anchor) : null;
       const mapping = card.createSpan({ cls: "tf-s-key-mapping" });
       if (entry.anchor && pin) {
@@ -11464,7 +11440,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     const field = (label, widthEm) => {
       const wrap = grid.createDiv({ cls: "tf-s-pin-field" });
       wrap.setCssStyles({ minWidth: `${widthEm}em` });
-      const lab = wrap.createEl("label", { text: label, cls: "tf-s-pin-field-label" });
+      wrap.createEl("label", { text: label, cls: "tf-s-pin-field-label" });
       return wrap;
     };
     const noteTypeWrap = field("Note type", 9);
@@ -11552,7 +11528,7 @@ var TownForgeSettingTab = class extends import_obsidian2.PluginSettingTab {
     };
     if (t.nameMode === "js") {
       const jsWrap = card.createDiv({ cls: "tf-s-pin-subsection" });
-      const lab = jsWrap.createEl("label", { text: "Name JS \u2014 in scope: app, api, seed, town, type, index, subtypes \u2014 return a string, or { name, subtype } to set both", cls: "tf-s-pin-block-label" });
+      jsWrap.createEl("label", { text: "Name JS \u2014 in scope: app, api, seed, town, type, index, subtypes \u2014 return a string, or { name, subtype } to set both", cls: "tf-s-pin-block-label" });
       const ta = jsWrap.createEl("textarea", { cls: "tf-s-pin-js-editor" });
       ta.value = (_a = t.nameJs) != null ? _a : "";
       ta.placeholder = `const [subtype, name] = (await api.rollUnscoped("TF-ShopPick")).result.split("|");
@@ -11563,7 +11539,7 @@ return { name, subtype };`;
       };
     }
     const subWrap = card.createDiv({ cls: "tf-s-pin-subsection" });
-    const subLab = subWrap.createEl("label", { text: "Subtypes (comma-separated) \u2014 written to frontmatter as subtype:. The JS hook returning { name, subtype } keeps name+subtype correlated; the built-in picks from this list but does not guarantee a match.", cls: "tf-s-pin-block-label" });
+    subWrap.createEl("label", { text: "Subtypes (comma-separated) \u2014 written to frontmatter as subtype:. The JS hook returning { name, subtype } keeps name+subtype correlated; the built-in picks from this list but does not guarantee a match.", cls: "tf-s-pin-block-label" });
     const subIn = subWrap.createEl("input", { type: "text", cls: "tf-s-pin-sub-input" });
     subIn.value = ((_b = t.subtypes) != null ? _b : []).join(", ");
     subIn.placeholder = "e.g. general, weapon, armor, alchemy, magic";

@@ -1,7 +1,7 @@
 import { pointInPolygonNonzero } from "./geometry";
 import { buildHeightField, contourSegments, hillshadeAt } from "./mountains";
 
-export var PALETTE = {
+export const PALETTE = {
   grassBase: "rgb(155,178,115)",
   grassBright: "rgb(175,195,130)",
   beach: "rgb(242,232,200)",
@@ -99,7 +99,7 @@ export function drawBase(ctx, scene, w, h) {
     }
   }
 }
-export var HYPSO = [
+export const HYPSO = [
   [196, 184, 150],
   [202, 188, 152],
   [208, 192, 156],
@@ -109,7 +109,7 @@ export var HYPSO = [
   [236, 222, 196],
   [246, 236, 214]
 ];
-export var GRASS_RGB = [155, 178, 115];
+export const GRASS_RGB = [155, 178, 115];
 export function reliefColor(field, gx, gy, v, maxH) {
   const sh = hillshadeAt(field, field.minx + gx * field.cell, field.miny + gy * field.cell);
   const band = Math.min(HYPSO.length - 1, Math.floor(v * HYPSO.length));
@@ -423,9 +423,9 @@ export function roundRect(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
 }
-export var STREET_COL = "rgb(188,170,134)";
-export var ROAD_COL = "rgb(176,158,120)";
-export var ROOF_PALETTE = [
+export const STREET_COL = "rgb(188,170,134)";
+export const ROAD_COL = "rgb(176,158,120)";
+export const ROOF_PALETTE = [
   [[178, 132, 92], [138, 96, 64]],
   // warm brown
   [[155, 122, 88], [118, 90, 60]],
@@ -638,7 +638,6 @@ export function drawDock(ctx, dock) {
     ctx.fill();
   };
   const PLANK = "rgb(150,120,86)";
-  const PLANK_DK = "rgb(96,72,48)";
   const PLANK_EDGE = "rgba(60,44,28,0.85)";
   if (dock.lane && dock.lane.length >= 2) {
     ctx.save();

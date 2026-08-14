@@ -6,9 +6,9 @@ import { LANDSCAPE_BASE_DISTANCE, SIZE_BASE_DISTANCE } from "./main";
 import { renderFull, renderScene } from "./render";
 import { generateLandscape } from "./landscape";
 
-export var TOWN_FORGE_VIEW = "town-forge-preview";
-export var TERRAINS = ["inland", "coastal", "river", "lake", "mountain"];
-export var SETTLEMENTS = [
+export const TOWN_FORGE_VIEW = "town-forge-preview";
+export const TERRAINS = ["inland", "coastal", "river", "lake", "mountain"];
+export const SETTLEMENTS = [
   "hamlet",
   "village",
   "small_town",
@@ -19,10 +19,10 @@ export var SETTLEMENTS = [
   "large_city",
   "metropolis"
 ];
-export var DIRECTIONS = ["random", "N", "E", "S", "W"];
-export var TRI_NEXT = { auto: "on", on: "off", off: "auto" };
-export var TRI_LABEL = { auto: "Auto", on: "On", off: "Off" };
-export var SYLL = ["thar", "mor", "wen", "dol", "fen", "rik", "vol", "sea", "gan", "lyth", "bram", "cor", "ash", "el", "grim", "haven", "ford", "wick", "stead", "mere"];
+export const DIRECTIONS = ["random", "N", "E", "S", "W"];
+export const TRI_NEXT = { auto: "on", on: "off", off: "auto" };
+export const TRI_LABEL = { auto: "Auto", on: "On", off: "Off" };
+export const SYLL = ["thar", "mor", "wen", "dol", "fen", "rik", "vol", "sea", "gan", "lyth", "bram", "cor", "ash", "el", "grim", "haven", "ford", "wick", "stead", "mere"];
 export function randomSeed() {
   const n = 2 + Math.floor(Math.random() * 2);
   let s = "";
@@ -38,7 +38,7 @@ export function randomName() {
   const b = SYLL[Math.floor(Math.random() * SYLL.length)];
   return titleCase(a + b);
 }
-export var TownForgePreviewView = class extends ItemView {
+export const TownForgePreviewView = class extends ItemView {
   constructor(leaf, getExportFolder, getTemplateFolder, getPinTypes, getOpenAfterExport, getGroupNotesByType, getEnableZoomMapExport, getShowTroubleshoot, getScaleMultiplier, getDistanceUnit) {
     super(leaf);
     this.state = {
@@ -316,6 +316,7 @@ export var TownForgePreviewView = class extends ItemView {
       try {
         viewport.releasePointerCapture(e.pointerId);
       } catch {
+        // Ignored: capture was already released — nothing to do.
       }
     };
     viewport.addEventListener("pointerup", endDrag);
@@ -544,7 +545,8 @@ export var TownForgePreviewView = class extends ItemView {
       if (!this.app.vault.getAbstractFileByPath(cur)) {
         try {
           await this.app.vault.createFolder(cur);
-        } catch (e) {
+        } catch {
+          // Ignored: the folder already exists — nothing to do.
         }
       }
     }
@@ -617,6 +619,7 @@ export var TownForgePreviewView = class extends ItemView {
             await this.app.workspace.getLeaf(false).openFile(file);
           }
         } catch {
+          // Ignored: opening the note is a convenience; the export itself succeeded.
         }
       }
     } catch (e) {
@@ -644,6 +647,7 @@ export var TownForgePreviewView = class extends ItemView {
         try {
           return await this.app.vault.read(file);
         } catch {
+          // Ignored: unreadable — fall through and try the next candidate.
         }
       }
     }
@@ -657,6 +661,7 @@ export var TownForgePreviewView = class extends ItemView {
         try {
           return await this.app.vault.read(f);
         } catch {
+          // Ignored: unreadable — fall through and try the next candidate.
         }
       }
     }
@@ -670,7 +675,7 @@ export var TownForgePreviewView = class extends ItemView {
   ensureTypeFrontmatter(body, type, town, subtype, size) {
     body = body.replace(/\r\n/g, "\n");
     const fmMatch = body.match(/^---\n([\s\S]*?)\n---\n?/);
-    const yamlVal = (v) => /[:#\-?\[\]{},&*!|>'"%@`]/.test(v) ? JSON.stringify(v) : v;
+    const yamlVal = (v) => /[:#\-?[\]{},&*!|>'"%@`]/.test(v) ? JSON.stringify(v) : v;
     const hasSub = !!(subtype && subtype.trim());
     const hasSize = !!(size && size.trim());
     if (fmMatch) {
@@ -745,7 +750,7 @@ ${body}`;
           const r = await this.runNameHook(t.nameJs, { seed: slot.seed, town, type: t.noteType, index: slot.index, subtypes: t.subtypes ?? [] });
           name = r.name;
           subtype = r.subtype;
-        } catch (e) {
+        } catch {
           name = "";
           subtype = "";
         }
@@ -844,7 +849,7 @@ ${body}`;
       if (!this.app.vault.getAbstractFileByPath(notePath)) {
         try {
           await this.app.vault.create(notePath, body);
-        } catch (e) {
+        } catch {
           written = false;
         }
       }

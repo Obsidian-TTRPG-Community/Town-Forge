@@ -1,8 +1,8 @@
 import { pointInPolygon, pointInPolygonNonzero } from "./geometry";
 import { GRID_H, GRID_W, astar, bankEndpointForBridge, buildCostGrid, chaikinOpen, findOpenTownsite, pathToPolyline, waterSideOfPoint, worldToGrid } from "./roads";
 
-export var INF2 = Infinity;
-export var ZONE_RADIUS_BY_SIZE = {
+export const INF2 = Infinity;
+export const ZONE_RADIUS_BY_SIZE = {
   hamlet: 90,
   village: 110,
   small_town: 140,
@@ -13,7 +13,7 @@ export var ZONE_RADIUS_BY_SIZE = {
   large_city: 222,
   metropolis: 285
 };
-export var ARM_LENGTH_BY_SIZE = {
+export const ARM_LENGTH_BY_SIZE = {
   hamlet: null,
   village: null,
   small_town: null,
@@ -24,7 +24,7 @@ export var ARM_LENGTH_BY_SIZE = {
   large_city: 200,
   metropolis: 270
 };
-export var HOUSE_TARGET_BY_SIZE = {
+export const HOUSE_TARGET_BY_SIZE = {
   hamlet: 6,
   village: 14,
   small_town: 28,
@@ -35,7 +35,7 @@ export var HOUSE_TARGET_BY_SIZE = {
   large_city: 500,
   metropolis: 800
 };
-export var SUB_ROAD_COUNT_BY_SIZE = {
+export const SUB_ROAD_COUNT_BY_SIZE = {
   hamlet: 1,
   village: 2,
   small_town: 3,
@@ -46,7 +46,7 @@ export var SUB_ROAD_COUNT_BY_SIZE = {
   large_city: 17,
   metropolis: 24
 };
-export var MAP_SIZE_BY_SIZE = {
+export const MAP_SIZE_BY_SIZE = {
   hamlet: 720,
   village: 760,
   small_town: 820,
@@ -57,13 +57,13 @@ export var MAP_SIZE_BY_SIZE = {
   large_city: 1180,
   metropolis: 1400
 };
-export var HOUSE_LONG_MIN = 16;
-export var HOUSE_LONG_MAX = 24;
-export var HOUSE_SHORT_MIN = 10;
-export var HOUSE_SHORT_MAX = 14;
-export var HOUSE_INTERVAL_MULT = 1.55;
-export var SETBACK_MIN = 12;
-export var SETBACK_MAX = 16;
+export const HOUSE_LONG_MIN = 16;
+export const HOUSE_LONG_MAX = 24;
+export const HOUSE_SHORT_MIN = 10;
+export const HOUSE_SHORT_MAX = 14;
+export const HOUSE_INTERVAL_MULT = 1.55;
+export const SETBACK_MIN = 12;
+export const SETBACK_MAX = 16;
 export function stampRoadAvoidance(grid, polyline, cellW, cellH, radius = 5, penalty = 22) {
   const stamped = /* @__PURE__ */ new Set();
   for (const p of polyline) {
@@ -516,7 +516,7 @@ export function rngShuffle(rng, lst) {
     lst[j] = tmp;
   }
 }
-export var OUTBUILDING_COUNTS = {
+export const OUTBUILDING_COUNTS = {
   // Small settlements get a handful of outlying functional buildings for
   // character — a mill, an inn, a stable — with no generic sprawl (that's a
   // city phenomenon).  Numbers grow with size.
@@ -1044,8 +1044,6 @@ export function buildDock(rng, scene, townSite, zoneRadius, size, w, h, terrain)
     }
     return false;
   };
-  const margin = Math.min(w, h) * 0.04;
-  const inCanvas = (p) => p.x >= -margin && p.x <= w + margin && p.y >= -margin && p.y <= h + margin;
   let boundary;
   if (footprint && footprint.length >= 3) {
     boundary = footprint;
@@ -1364,7 +1362,7 @@ export function buildDock(rng, scene, townSite, zoneRadius, size, w, h, terrain)
   }
   return { quay, jetties, boats, warehouses, lane, shorePt, inward };
 }
-export var FARM_CAP = {
+export const FARM_CAP = {
   hamlet: 14,
   village: 28,
   small_town: 45,
@@ -2096,27 +2094,6 @@ export function buildCityFootprint(rng, scene, townSite, coreRadius, armLength, 
     if (bankside)
       return bankside;
   }
-  const distToPolyEdge = (pt, poly) => {
-    let best = Infinity;
-    const n = poly.length;
-    for (let i = 0; i < n; i++) {
-      const a = poly[i];
-      const b = poly[(i + 1) % n];
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const seg2 = dx * dx + dy * dy;
-      let d;
-      if (seg2 < 1e-9)
-        d = Math.hypot(pt.x - a.x, pt.y - a.y);
-      else {
-        const t = Math.max(0, Math.min(1, ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / seg2));
-        d = Math.hypot(pt.x - (a.x + dx * t), pt.y - (a.y + dy * t));
-      }
-      if (d < best)
-        best = d;
-    }
-    return best;
-  };
   const roads = scene.roads;
   const artAngles = [];
   for (const road of roads) {
@@ -2239,13 +2216,13 @@ export function buildCityFootprint(rng, scene, townSite, coreRadius, armLength, 
   }
   return out.length ? out : [raw];
 }
-export var TARGET_BLOCK_AREA_BY_SIZE = {
+export const TARGET_BLOCK_AREA_BY_SIZE = {
   small_city: 2200,
   city: 2e3,
   large_city: 1800,
   metropolis: 1600
 };
-export var PARK_COUNT_BY_SIZE = {
+export const PARK_COUNT_BY_SIZE = {
   small_city: 0,
   city: 1,
   large_city: 2,

@@ -14,7 +14,28 @@ npm install        # install dev dependencies
 npm run dev        # watch-mode build (rebuilds main.js on save)
 npm run build      # one-off production build -> main.js
 npm run typecheck  # optional: tsc --noEmit (advisory; see note below)
+npm run lint       # reproduce the Obsidian plugin review locally (~7k findings)
+npm run lint:signal # the same run with the untyped-source noise muted (45)
 ```
+
+## Linting
+
+`npm run lint` runs `eslint-plugin-obsidianmd` with the same type-aware
+configuration the Obsidian community-plugin reviewer uses, so its output should
+match the review report. Run it from the repo root — the obsidianmd rules read
+`./manifest.json` to check `minAppVersion` and resolve nothing from elsewhere.
+
+The full run reports ~7,000 findings. Almost all are the `no-unsafe-*` family,
+which has a single root cause (see "A note on the source" below) and says
+nothing about correctness. `npm run lint:signal` mutes exactly that family and
+leaves everything else on, which brings the output down to 45 — a number small
+enough to read, and small enough that a new finding stands out. That is the one
+to run before pushing; it exits 0 while the count holds steady.
+
+The 45 are catalogued under "Known remaining warnings" in `CHANGELOG.md`. All of
+them are either deliberate (the `new Function` name hook, the command ID that
+can't be renamed without breaking users' hotkeys) or blocked on raising
+`minAppVersion` to 1.13.0.
 
 ## Continuous integration
 

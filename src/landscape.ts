@@ -2,7 +2,7 @@ import { offsetPolyline, pointInPolygon, smoothClosed, smoothPolyline } from "./
 import { buildHeightField, densifySpine, footprintPolygon } from "./mountains";
 import { Noise2D, hash32, makeRng } from "./rng";
 
-export var TAU = Math.PI * 2;
+export const TAU = Math.PI * 2;
 export function closeAlongEdgesRect(curve, e1, e2, x0, y0, rw, rh, side) {
   const x1 = x0 + rw;
   const y1 = y0 + rh;
@@ -437,7 +437,7 @@ export function isMountain(pt, scene) {
   }
   return false;
 }
-export var FOOTHILL_MARGIN = 22;
+export const FOOTHILL_MARGIN = 22;
 export function canopyNearMountain(polygon, centre, scene, margin) {
   if (!scene.ridges || !scene.ridges.length)
     return false;

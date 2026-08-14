@@ -1,10 +1,10 @@
 import { pointInPolygon } from "./geometry";
 
-export var GRID_W = 100;
-export var GRID_H = 100;
-export var MOUNTAIN_COST = 45;
-export var INF = Infinity;
-export var SQRT2 = Math.SQRT2;
+export const GRID_W = 100;
+export const GRID_H = 100;
+export const MOUNTAIN_COST = 45;
+export const INF = Infinity;
+export const SQRT2 = Math.SQRT2;
 export function buildCostGrid(scene, w, h) {
   const cellW = w / GRID_W;
   const cellH = h / GRID_H;
@@ -144,7 +144,7 @@ export function nearestPassable(grid, cell, maxSearch = 8) {
   }
   return null;
 }
-export var MinHeap = class {
+export const MinHeap = class {
   constructor() {
     this.a = [];
   }
@@ -198,7 +198,7 @@ export var MinHeap = class {
     return top;
   }
 };
-export var NEIGHBOURS = [
+export const NEIGHBOURS = [
   [-1, -1, SQRT2],
   [0, -1, 1],
   [1, -1, SQRT2],

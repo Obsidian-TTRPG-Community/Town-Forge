@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-08-05
+
+Lint and dead-code cleanup. No functional or visual change — the rebuilt bundle
+differs from 1.2.1 only in the 17 places listed below.
+
+### Changed
+
+- All 66 remaining `var` declarations are now `const` (or `let` for the one
+  variable that is reassigned), a leftover of the source having been
+  reconstructed from an esbuild bundle.
+- Removed dead code: the unused `inCanvas`/`margin` pair and the unused
+  `distToPolyEdge` helper in `buildings.ts`, the unused `PLANK_DK` colour in
+  `render.ts`, and nine element bindings in `main.ts` left behind by the 1.2.1
+  style refactor.
+- The six deliberately-empty `catch` blocks now say why they're empty, and the
+  eight `catch` clauses that ignored the error no longer bind an unused one.
+- `Workspace.revealLeaf` is now awaited (Obsidian's docs ask for this so the
+  view isn't left deferred); the ribbon handler, the set-up-checklist IIFE and
+  `onunload` no longer hand a floating promise to a void-returning API.
+- `super(...arguments)` → rest parameters, one redundant regex escape dropped,
+  and the `builtin-modules` dependency replaced with `node:module`'s built-in
+  `builtinModules`.
+
+### Added
+
+- `npm run lint` reproduces the Obsidian plugin review locally (the reviewer is
+  `eslint-plugin-obsidianmd`, run type-aware from the repo root), and
+  `npm run lint:signal` mutes the untyped-source noise described below so the
+  remaining 45 findings — and any new one — are actually readable. See
+  BUILDING.md. `typescript` moves 4.7.4 → ^5, which the linter requires; the
+  bundle is unaffected, as esbuild does not typecheck.
+
+### Known remaining warnings
+
+The plugin review will still report ~7,000 `no-unsafe-*` findings. They are a
+single root cause — the reconstructed source is untyped, so every value is
+`any` — and are tracked as typing debt rather than defects. The other 45 are
+38 sentence-case style nits, three deprecated-API calls that can only be
+replaced by raising `minAppVersion` to 1.13.0 (`display`, `setWarning`), the
+command ID (renaming it would break users' existing hotkeys), and the
+`new Function()` name hook, which is a deliberate feature.
+
 ## [1.2.1] - 2026-08-05
 
 Maintenance release: no gameplay or generation changes. It clears the two errors
@@ -107,7 +149,9 @@ preview panel, code blocks, and TTRPG Tools: Maps export). These predate this
 changelog — see the [commit history](https://github.com/Obsidian-TTRPG-Community/Town-Forge/commits/main)
 for details.
 
-[Unreleased]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.2...HEAD
+[1.2.2]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.1...1.2.2
+[1.2.1]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.1.1...1.2.0
 [1.1.1]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.0.4...1.1.0
