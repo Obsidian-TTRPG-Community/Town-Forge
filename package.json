@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
-    "esbuild": "0.17.3",
+    "esbuild": "0.28.1",
     "eslint": "^9.39.5",
     "eslint-plugin-obsidianmd": "^0.4.1",
     "obsidian": "latest",
