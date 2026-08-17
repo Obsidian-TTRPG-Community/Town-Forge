@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-08-17
+
+Developer-facing only. `main.js` is byte-for-byte identical to 1.2.2, so this
+release changes nothing about how the plugin looks or behaves.
+
 ### Changed
 
 - **`npm run typecheck` passes meaningfully for the first time** — 353 errors
@@ -195,7 +200,8 @@ preview panel, code blocks, and TTRPG Tools: Maps export). These predate this
 changelog — see the [commit history](https://github.com/Obsidian-TTRPG-Community/Town-Forge/commits/main)
 for details.
 
-[Unreleased]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.2...HEAD
+[Unreleased]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.3...HEAD
+[1.2.3]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.1.1...1.2.0
