@@ -3,6 +3,7 @@ import { offsetPolyline, pointInPolygon } from "./geometry";
 import { makeCoast, makeLake, makeMountainSpine, makeMountainSpineOverlay, makeRiver, placeForests } from "./landscape";
 import { Noise2D, hash32, makeRng } from "./rng";
 import { buildRoadNetwork, waterSideOfPoint } from "./roads";
+import type { Scene } from "./types";
 
 export function generateFull(terrain, seedStr, opts) {
   const rng = makeRng(hash32(seedStr + ":" + terrain));
@@ -12,7 +13,7 @@ export function generateFull(terrain, seedStr, opts) {
   const OUT = fullMode ? MAP_SIZE_BY_SIZE[size] ?? 1e3 : 1e3;
   const w = fullMode ? OUT + 500 : OUT;
   const h = w;
-  const scene = { terrain, water: null, centreline: null, ridges: null };
+  const scene: Scene = { terrain, water: null, centreline: null, ridges: null };
   if (terrain === "coastal") {
     scene.water = makeCoast(rng, noise, w, h, opts).water;
   } else if (terrain === "river") {

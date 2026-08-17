@@ -5,6 +5,7 @@ import { generateFull } from "./generate";
 import { LANDSCAPE_BASE_DISTANCE, SIZE_BASE_DISTANCE } from "./main";
 import { renderFull, renderScene } from "./render";
 import { generateLandscape } from "./landscape";
+import type { MapState, PinType } from "./types";
 
 export const TOWN_FORGE_VIEW = "town-forge-preview";
 export const TERRAINS = ["inland", "coastal", "river", "lake", "mountain"];
@@ -39,6 +40,48 @@ export function randomName() {
   return titleCase(a + b);
 }
 export const TownForgePreviewView = class extends ItemView {
+  // Declared so the compiler can check them: the reconstructed source assigned
+  // these in the constructor without ever declaring them, which is what produced
+  // 175 phantom "property does not exist" errors from tsc. Declarations only —
+  // no initialisers — so nothing is emitted and the bundle is unchanged.
+  state: MapState;
+  zoom: number;
+  panX: number;
+  panY: number;
+  lastGenMs: number;
+  lastMapSize: number;
+  stale: boolean;
+  /** Most recent full-mode scene, captured at render time so Export can place
+   *  markers without regenerating. Null in landscape mode. Untyped pending the
+   *  render/generate domain model. */
+  lastFullScene: any;
+
+  // Settings accessors, injected by main.ts so the panel never reads settings
+  // directly. Each falls back to a default when not supplied.
+  getExportFolder: () => string;
+  getTemplateFolder: () => string;
+  getPinTypes: () => PinType[];
+  getOpenAfterExport: () => boolean;
+  getGroupNotesByType: () => boolean;
+  getEnableZoomMapExport: () => boolean;
+  getShowTroubleshoot: () => boolean;
+  getScaleMultiplier: () => number;
+  getDistanceUnit: () => string;
+
+  // Elements kept for later mutation (show/hide, value updates, redraw).
+  canvas: HTMLCanvasElement;
+  viewport: HTMLDivElement;
+  status: HTMLDivElement;
+  generateBtn: HTMLButtonElement;
+  nameInputEl: HTMLInputElement;
+  seedInputEl: HTMLInputElement;
+  mountainSlider: HTMLInputElement;
+  dirRowEl: HTMLDivElement;
+  settlementRowEl: HTMLDivElement;
+  mtnSideRowEl: HTMLDivElement;
+  landmarksRowEl: HTMLDivElement;
+  landmarksSection: HTMLDivElement;
+
   constructor(leaf, getExportFolder, getTemplateFolder, getPinTypes, getOpenAfterExport, getGroupNotesByType, getEnableZoomMapExport, getShowTroubleshoot, getScaleMultiplier, getDistanceUnit) {
     super(leaf);
     this.state = {
@@ -507,7 +550,7 @@ export const TownForgePreviewView = class extends ItemView {
     try {
       if (this.stale)
         this.refresh();
-      const blob = await new Promise((res) => this.canvas.toBlob((b) => res(b), "image/png"));
+      const blob = await new Promise<Blob | null>((res) => this.canvas.toBlob((b) => res(b), "image/png"));
       if (!blob) {
         new Notice("Town Forge: could not render PNG");
         return;
@@ -558,7 +601,7 @@ export const TownForgePreviewView = class extends ItemView {
     try {
       if (this.stale)
         this.refresh();
-      const blob = await new Promise((res) => this.canvas.toBlob((b) => res(b), "image/png"));
+      const blob = await new Promise<Blob | null>((res) => this.canvas.toBlob((b) => res(b), "image/png"));
       if (!blob) {
         new Notice("Town Forge: could not render PNG");
         return;

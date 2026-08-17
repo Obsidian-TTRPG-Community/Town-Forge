@@ -1,4 +1,6 @@
-export function smoothPolyline(pts, iters = 2) {
+import type { Point, Poly } from "./types";
+
+export function smoothPolyline(pts: Poly, iters = 2): Poly {
   let out = pts;
   for (let k = 0; k < iters; k++) {
     const nxt = [out[0]];
@@ -13,10 +15,10 @@ export function smoothPolyline(pts, iters = 2) {
   }
   return out;
 }
-export function smoothClosed(pts, iters = 2) {
+export function smoothClosed(pts: Poly, iters = 2): Poly {
   let out = pts;
   for (let k = 0; k < iters; k++) {
-    const nxt = [];
+    const nxt: Poly = [];
     for (let i = 0; i < out.length; i++) {
       const a = out[i];
       const b = out[(i + 1) % out.length];
@@ -27,9 +29,9 @@ export function smoothClosed(pts, iters = 2) {
   }
   return out;
 }
-export function offsetPolyline(pts, dist) {
-  const left = [];
-  const right = [];
+export function offsetPolyline(pts: Poly, dist: number): Poly {
+  const left: Poly = [];
+  const right: Poly = [];
   for (let i = 0; i < pts.length; i++) {
     const p = pts[i];
     const prev = pts[Math.max(0, i - 1)];
@@ -44,7 +46,7 @@ export function offsetPolyline(pts, dist) {
   }
   return left.concat(right.reverse());
 }
-export function pointInPolygon(pt, poly) {
+export function pointInPolygon(pt: Point, poly: Poly): boolean {
   const x = pt.x;
   const y = pt.y;
   let inside = false;
@@ -61,7 +63,7 @@ export function pointInPolygon(pt, poly) {
   }
   return inside;
 }
-export function pointInPolygonNonzero(pt, poly) {
+export function pointInPolygonNonzero(pt: Point, poly: Poly): boolean {
   const x = pt.x;
   const y = pt.y;
   let wind = 0;

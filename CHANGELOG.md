@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`npm run typecheck` passes meaningfully for the first time** — 353 errors
+  down to 11. The source was reconstructed by decompiling an esbuild bundle, so
+  it arrived with every type annotation, every class-field declaration and every
+  optional-parameter `?` erased. `tsc` had never been clean on it, on any
+  release, so 300 lines of noise were scrolling past on every run and any real
+  error would have been invisible in them.
+
+  The bulk of it was undeclared fields: 29 on `TownForgePreviewView` alone
+  accounted for 175 errors, because a field assigned in a constructor but never
+  declared makes every later `this.x` a phantom. Declaring them, plus
+  `tfSettings` on the plugin and `plugin` on the settings tab, cleared 247.
+
+- New `src/types.ts` holds the shared shapes the modules pass between each
+  other: `Point` / `Poly` / `Rng` / `EdgeFlags`, and the four record types that
+  had been travelling as `any` — `MapState` (the panel's control state),
+  `MapConfig` (a parsed `town-forge` block), `Scene` (a generated map, built up
+  in stages), `PinType` and `TownForgeSettings`. `src/obsidian-augment.d.ts`
+  declares the `app.plugins` shape the integration checks read, which Obsidian's
+  own typings deliberately omit.
+
+- `geometry.ts`, `rng.ts` and `roads.ts`'s `MinHeap` (with a new `AStarNode`
+  interface documenting its tie-break ordering) are now fully annotated;
+  `geometry.ts` and `rng.ts` report zero lint findings. Six functions had their
+  optional-parameter markers restored — the six "expected N arguments, got M"
+  errors turned out to be erased `?`s, not call-site bugs.
+
+- **The bundle is byte-for-byte identical at every step**, verified with `cmp`
+  after each change. Type annotations, class-field declarations and optional
+  markers all erase to nothing under this tsconfig, so none of this can alter
+  behaviour. Lint drops 7054 → 6573.
+
+  The remaining 11 `tsc` errors each need a runtime-affecting change or a
+  judgement call — `TAbstractFile` → `TFile` narrowing, an undeclared
+  `View.rebuild`, two `(0, normalizePath)(…)` comma-operator artifacts and three
+  genuine oddities in `buildings.ts` — so they are deliberately left for a change
+  that is allowed to move the bundle.
+
+  Note that the project-wide lint count only falls once a whole dependency chain
+  is typed: giving a leaf function real parameter types surfaces
+  `no-unsafe-argument` at its still-untyped callers, so `buildings.ts` went up by
+  94 while the total went down. Typing the remaining modules is a matter of
+  modelling the domain (town, building, lot, road, landscape) properly, not of
+  mechanical annotation.
+
 ## [1.2.2] - 2026-08-05
 
 Lint and dead-code cleanup. No functional or visual change — the rebuilt bundle

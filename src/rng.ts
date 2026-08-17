@@ -1,4 +1,6 @@
-export function hash32(s) {
+import type { Rng } from "./types";
+
+export function hash32(s: string): number {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);
@@ -6,7 +8,7 @@ export function hash32(s) {
   }
   return h >>> 0;
 }
-export function makeRng(seed) {
+export function makeRng(seed: number): Rng {
   let a = seed >>> 0;
   return function() {
     a = a + 1831565813 >>> 0;
@@ -18,9 +20,12 @@ export function makeRng(seed) {
   };
 }
 export const Noise2D = class {
-  constructor(rng) {
+  perm: number[];
+  grad: number[];
+
+  constructor(rng: Rng) {
     const N = 256;
-    const p = [];
+    const p: number[] = [];
     for (let i = 0; i < N; i++)
       p.push(i);
     for (let i = N - 1; i > 0; i--) {
@@ -34,10 +39,10 @@ export const Noise2D = class {
     for (let i = 0; i < N; i++)
       this.grad.push(rng() * 2 - 1);
   }
-  _v(ix, iy) {
+  _v(ix: number, iy: number): number {
     return this.grad[this.perm[ix + this.perm[iy & 255] & 255]];
   }
-  sample(x, y) {
+  sample(x: number, y: number): number {
     const ix = Math.floor(x);
     const iy = Math.floor(y);
     const fx = x - ix;
@@ -50,7 +55,7 @@ export const Noise2D = class {
     const d = this._v(ix + 1, iy + 1);
     return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
   }
-  fbm(x, y, octaves, persistence) {
+  fbm(x: number, y: number, octaves: number, persistence: number): number {
     let amp = 1;
     let freq = 1;
     let total = 0;

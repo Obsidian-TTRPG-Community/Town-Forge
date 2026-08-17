@@ -1,3 +1,5 @@
+import type { PinType } from "./types";
+
 export const SCALE_REFERENCE_HOUSES = 600;
 export const SHOP_LISTS = {
   surnames: ["Oakhart", "Vance", "Hollick", "Jessop", "Pemberton", "Ironhand", "Foxglove", "Thornwood", "Ashby", "Crane", "Marlow", "Pike", "Quill", "Rooke", "Sallow", "Tanner", "Underhill", "Welk", "Brightwater", "Dunmore", "Fenwick", "Garrow"],
@@ -71,7 +73,7 @@ export function parsePinTypesJson(json) {
     const nameMode = o.nameMode === "js" ? "js" : "builtin";
     const min = Math.max(0, Math.floor(Number(o.countMin ?? 1)) || 0);
     const max = Math.max(min, Math.floor(Number(o.countMax ?? min)) || min);
-    const t = {
+    const t: PinType = {
       id,
       noteType,
       enabled: o.enabled !== false,

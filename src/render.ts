@@ -195,7 +195,7 @@ export function drawContourMountain(ctx, mtn, water) {
     ctx.stroke();
   }
 }
-export function drawForests(ctx, scene, excludeZone, extraExclude) {
+export function drawForests(ctx, scene, excludeZone?, extraExclude?) {
   if (!scene.forests)
     return;
   const TREE_DARK = "rgb(48,76,40)";

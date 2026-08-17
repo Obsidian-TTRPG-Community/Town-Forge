@@ -6,6 +6,7 @@ import { MAP_SIZE_BY_SIZE } from "./buildings";
 import { generateFull } from "./generate";
 import { renderFull, renderScene } from "./render";
 import { generateLandscape } from "./landscape";
+import type { MapConfig, TownForgeSettings } from "./types";
 
 export const VALID_TERRAINS = ["inland", "coastal", "river", "lake", "mountain"];
 // Bundled place-note templates (the "portrait edition") — seeded into
@@ -104,7 +105,7 @@ export function frontmatterToConfigLines(fm) {
 }
 export function parseConfig(source) {
   const errors = [];
-  const config = {
+  const config: MapConfig = {
     terrain: "coastal",
     seed: "townforge",
     size: 512,
@@ -265,6 +266,11 @@ export function parseConfig(source) {
   return { config, errors };
 }
 export const TownForgePlugin = class extends Plugin {
+  // Declaration only, so the compiler knows the field exists and what shape it
+  // has. Deliberately NOT called `settings` — Obsidian 1.13 put a `settings`
+  // property on Plugin itself, which is what tripped the 1.2.0 review.
+  tfSettings: TownForgeSettings;
+
   constructor(...args) {
     super(...args);
     this.tfSettings = DEFAULT_SETTINGS;
@@ -485,6 +491,8 @@ export const TownForgePlugin = class extends Plugin {
   }
 };
 export const TownForgeSettingTab = class extends PluginSettingTab {
+  plugin: InstanceType<typeof TownForgePlugin>;
+
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;

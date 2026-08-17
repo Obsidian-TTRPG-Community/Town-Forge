@@ -144,14 +144,28 @@ export function nearestPassable(grid, cell, maxSearch = 8) {
   }
   return null;
 }
+/**
+ * A node on the A* open list. `f`/`g` are the usual costs and `ix`/`iy` the grid
+ * cell; MinHeap.less() breaks ties on g, then ix, then iy, so that a given grid
+ * and start/goal pair always yields the same path.
+ */
+export interface AStarNode {
+  f: number;
+  g: number;
+  ix: number;
+  iy: number;
+}
+
 export const MinHeap = class {
+  a: AStarNode[];
+
   constructor() {
     this.a = [];
   }
-  get size() {
+  get size(): number {
     return this.a.length;
   }
-  less(i, j) {
+  less(i: number, j: number): boolean {
     const x = this.a[i];
     const y = this.a[j];
     if (x.f !== y.f)
@@ -162,7 +176,7 @@ export const MinHeap = class {
       return x.ix < y.ix;
     return x.iy < y.iy;
   }
-  push(n) {
+  push(n: AStarNode): void {
     this.a.push(n);
     let i = this.a.length - 1;
     while (i > 0) {
@@ -174,7 +188,7 @@ export const MinHeap = class {
         break;
     }
   }
-  pop() {
+  pop(): AStarNode {
     const top = this.a[0];
     const last = this.a.pop();
     if (this.a.length > 0) {

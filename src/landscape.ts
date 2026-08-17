@@ -1,6 +1,7 @@
 import { offsetPolyline, pointInPolygon, smoothClosed, smoothPolyline } from "./geometry";
 import { buildHeightField, densifySpine, footprintPolygon } from "./mountains";
 import { Noise2D, hash32, makeRng } from "./rng";
+import type { Scene } from "./types";
 
 export const TAU = Math.PI * 2;
 export function closeAlongEdgesRect(curve, e1, e2, x0, y0, rw, rh, side) {
@@ -277,7 +278,7 @@ export function buildMassif(rng, cx, cy, dirAng, len, baseW, peakH) {
   }
   return { spines, crag: 0.5, widthVar: 0.8, k: 0.32, seed };
 }
-export function mountainsToRidges(mtns, avoidWater) {
+export function mountainsToRidges(mtns, avoidWater?) {
   const ridges = [];
   for (const m of mtns) {
     const field = buildHeightField(m, 8, 44, avoidWater ?? void 0);
@@ -287,7 +288,7 @@ export function mountainsToRidges(mtns, avoidWater) {
   }
   return ridges;
 }
-export function makeMountainSpine(rng, noise, w, h, opts, cropSize, anchor) {
+export function makeMountainSpine(rng, noise, w, h, opts, cropSize?, anchor?) {
   const rangeLen = opts.rangeLen ?? 0.65;
   const peakCount = Math.floor(opts.peakCount ?? 6);
   const scale = Math.max(0.55, 0.55 + (Math.max(1, peakCount) - 6) / 6 * 0.5);
@@ -338,7 +339,7 @@ export function makeMountainSpine(rng, noise, w, h, opts, cropSize, anchor) {
   }
   return { mountains: mtns, ridges: mountainsToRidges(mtns) };
 }
-export function makeMountainSpineOverlay(rng, noise, w, h, opts, side, avoidWater, cropSize, anchor) {
+export function makeMountainSpineOverlay(rng, noise, w, h, opts, side, avoidWater, cropSize?, anchor?) {
   const peakCount = Math.floor(opts.peakCount ?? 6);
   if (peakCount <= 0)
     return { mountains: [], ridges: [] };
@@ -401,7 +402,7 @@ export function generateLandscape(terrain, seedStr, w, h, opts) {
 export function generateWith(terrain, seedStr, w, h, opts) {
   const rng = makeRng(hash32(seedStr + ":" + terrain));
   const noise = new Noise2D(rng);
-  const scene = { terrain, water: null, centreline: null, ridges: null };
+  const scene: Scene = { terrain, water: null, centreline: null, ridges: null };
   if (terrain === "coastal") {
     scene.water = makeCoast(rng, noise, w, h, opts).water;
   } else if (terrain === "river") {
