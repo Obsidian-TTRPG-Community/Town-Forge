@@ -5,7 +5,7 @@ import { generateFull } from "./generate";
 import { LANDSCAPE_BASE_DISTANCE, SIZE_BASE_DISTANCE } from "./main";
 import { renderFull, renderScene } from "./render";
 import { generateLandscape } from "./landscape";
-import type { MapState, PinType } from "./types";
+import type { MapState, PinType, Scene } from "./types";
 
 export const TOWN_FORGE_VIEW = "town-forge-preview";
 export const TERRAINS = ["inland", "coastal", "river", "lake", "mountain"];
@@ -52,9 +52,9 @@ export const TownForgePreviewView = class extends ItemView {
   lastMapSize: number;
   stale: boolean;
   /** Most recent full-mode scene, captured at render time so Export can place
-   *  markers without regenerating. Null in landscape mode. Untyped pending the
-   *  render/generate domain model. */
-  lastFullScene: any;
+   *  markers without regenerating. Null in landscape mode. Its stage fields are
+   *  still `Unmodelled` — see types.ts. */
+  lastFullScene: Scene | null;
 
   // Settings accessors, injected by main.ts so the panel never reads settings
   // directly. Each falls back to a default when not supplied.

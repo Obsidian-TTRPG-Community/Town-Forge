@@ -11,6 +11,14 @@
  * Types only — this file emits no JavaScript and cannot change the bundle.
  */
 
+/**
+ * A value whose shape is real but not yet modelled — a polygon soup, a lot, a
+ * building footprint. Named rather than written as a bare `any` so the typing
+ * debt is greppable: every `Unmodelled` is a place the domain model still has
+ * to be designed. Replacing them is the work described in CHANGELOG 1.2.3.
+ */
+export type Unmodelled = any;
+
 /** A 2D point. The single most common shape in the codebase. */
 export interface Point {
   x: number;
@@ -143,28 +151,28 @@ export interface MapConfig {
  * first, then roads, then what sits on the blocks — so every field beyond
  * `terrain` is optional and populated only for the modes that produce it.
  *
- * The member types are still `unknown`-free `any` placeholders: modelling
- * polygons, lots and building footprints properly is the next piece of work.
- * Declaring the keys is what lets the compiler catch a misspelt stage name.
+ * The member types are still `Unmodelled`: modelling polygons, lots and building
+ * footprints properly is the next piece of work. Declaring the keys is already
+ * enough for the compiler to catch a misspelt stage name.
  */
 export interface Scene {
   terrain: string;
-  water: any;
-  centreline: any;
-  ridges: any;
+  water: Unmodelled;
+  centreline: Unmodelled;
+  ridges: Unmodelled;
   riverWidth?: number;
-  mountains?: any;
-  mountainSide?: any;
-  roads?: any;
-  outlanes?: any;
-  walls?: any;
-  street_base?: any;
-  houses?: any;
-  outbuildings?: any;
-  footprint?: any;
-  parks?: any;
-  forests?: any;
-  farms?: any;
-  dock?: any;
-  landmarks?: any;
+  mountains?: Unmodelled;
+  mountainSide?: Unmodelled;
+  roads?: Unmodelled;
+  outlanes?: Unmodelled;
+  walls?: Unmodelled;
+  street_base?: Unmodelled;
+  houses?: Unmodelled;
+  outbuildings?: Unmodelled;
+  footprint?: Unmodelled;
+  parks?: Unmodelled;
+  forests?: Unmodelled;
+  farms?: Unmodelled;
+  dock?: Unmodelled;
+  landmarks?: Unmodelled;
 }

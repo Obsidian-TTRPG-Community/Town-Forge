@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.4] - 2026-08-17
+
+### Fixed
+
+- **`minAppVersion` raised 1.7.2 → 1.8.7, which is what the plugin has actually
+  required since 1.1.0.** The set-up checklist reads Templater's *Trigger on new
+  file creation* toggle through `App.loadLocalStorage`, because it is a
+  per-device setting rather than part of `tp.settings` — and that method was
+  added in Obsidian 1.8.7. Six releases declared 1.7.2 while calling it.
+
+  The call site is guarded with `typeof app.loadLocalStorage === "function"`, so
+  on 1.7.2–1.8.6 nothing threw; the Templater step simply couldn't read the
+  toggle and showed as undetermined. That is why it went unnoticed.
+
+  It surfaced now because of 1.2.3's typing work: with the settings tab's
+  `plugin` field declared, `app` is no longer `any`, so the community review's
+  `no-unsupported-api` rule can finally resolve what `loadLocalStorage` belongs
+  to. Verified against the 1.2.2 tree — the same call, zero findings there.
+
+  `versions.json` deliberately still maps 1.2.3 to 1.7.2. Re-pinning it would
+  only push affected users back to 1.2.2, which contains the identical call.
+
+### Changed
+
+- `Scene`'s not-yet-modelled members are now a named `Unmodelled` alias instead
+  of bare `any`, so the remaining typing debt is greppable, and the preview
+  panel's `lastFullScene` is properly `Scene | null`. Drops the
+  `no-explicit-any` findings 1.2.3 introduced from 18 to 2.
+
+The bundle is byte-for-byte identical to 1.2.2 and 1.2.3.
+
 ## [1.2.3] - 2026-08-17
 
 Developer-facing only. `main.js` is byte-for-byte identical to 1.2.2, so this
@@ -200,7 +231,8 @@ preview panel, code blocks, and TTRPG Tools: Maps export). These predate this
 changelog — see the [commit history](https://github.com/Obsidian-TTRPG-Community/Town-Forge/commits/main)
 for details.
 
-[Unreleased]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.3...HEAD
+[Unreleased]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.4...HEAD
+[1.2.4]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.3...1.2.4
 [1.2.3]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/Obsidian-TTRPG-Community/Town-Forge/compare/1.2.0...1.2.1
